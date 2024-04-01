@@ -32,6 +32,14 @@ namespace TemperatureWarriorCode {
 
         public int count = 0;
 
+        //Initialize PID controller with appropriate gains and limits
+        public static double Kp = 0.1;    // Proportional gain
+        public static double Ki = 0.1;   // Integral gain
+        public static double Kd = 0.05;   // Derivative gain
+        public static double N = 10;      // Derivative filter coefficient
+        public static double outputUpperLimit = 50;  // Upper output limit
+        public static double outputLowerLimit = -50;    // Lower output limit
+
         public override async Task Run() {
             if (count == 0) {
                 Console.WriteLine("Initialization...");
@@ -79,6 +87,19 @@ namespace TemperatureWarriorCode {
         //TW Combat Round
         public static void StartRound() {
 
+            // Initialize PID controller
+            PID pidController = new PID(Kp, Ki, Kd, N, outputUpperLimit, outputLowerLimit);
+
+            //Desired temp and voltage value
+            double voltage;
+            //double MIN_TEMP = 0;
+            //double MAX_TEMP = 0;
+            double DESIRED_TEMP = (MAX_TEMP - MIN_TEMP) / 2;
+            bool is_heating = false;
+            bool is_cooling = false;
+            bool first_call = true;
+            TimeSpan time_span;
+
             Stopwatch timer = Stopwatch.StartNew();
             timer.Start();
 
@@ -125,6 +146,43 @@ namespace TemperatureWarriorCode {
                 //This is the time refresh we did not do before
                 Thread.Sleep(Data.refresh - sleep_time);
 
+                //PID Controller time span
+                if (first_call == true) {
+                    // For default time span in first call
+                    time_span = TimeSpan.FromSeconds(0);
+                    first_call = false;
+                } else {
+                    // For the rest of the calls
+                    time_span = timer.Elapsed;
+                    timer.Restart();
+                }
+
+                // PID Controller
+                double output = pidController.PID_iterate(DESIRED_TEMP, double.Parse(Data.temp_act), time_span);
+                Console.WriteLine($"Output={output}");
+
+                //Get voltage to apply
+                if (output > 0) {
+                    //Heating
+                    voltage = INITIAL_VOL + output;
+                    is_heating = true;
+                    is_cooling = false;
+                } else if (output < 0) {
+                    //Cooling
+                    voltage = INITIAL_VOL + output;
+                    is_heating = false;
+                    is_cooling = true;
+                // PONER RANGO DE OUTPUT EN EL QUE SE DEBE PARAR DE CALENTAR Y ENFRIAR
+                } else {
+                    //Stop heating or cooling
+                    voltage = 0;
+                    is_heating = false;
+                    is_cooling = false;
+                }
+
+                //Update controller with the new voltage
+
+
                 //Temperature registration
                 Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
                 timeController.RegisterTemperature(double.Parse(Data.temp_act));
@@ -132,6 +190,8 @@ namespace TemperatureWarriorCode {
 
             }
             Console.WriteLine("Round Finish");
+            // Reset PID controller
+            pidController.ResetController();
             t.Abort();
 
             total_time_in_range += timeController.TimeInRangeInMilliseconds;
