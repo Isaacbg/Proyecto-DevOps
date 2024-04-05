@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using TemperatureWarriorCode.Web;
 using NETDuinoWar;
+using Meadow.Foundation.Controllers.Pid;
 
 
 namespace TemperatureWarriorCode {
@@ -33,12 +34,11 @@ namespace TemperatureWarriorCode {
         public int count = 0;
 
         //Initialize PID controller with appropriate gains and limits
-        public static double Kp = 0.1;    // Proportional gain
-        public static double Ki = 0.1;   // Integral gain
-        public static double Kd = 0.05;   // Derivative gain
-        public static double N = 10;      // Derivative filter coefficient
-        public static double outputUpperLimit = 50;  // Upper output limit
-        public static double outputLowerLimit = -50;    // Lower output limit
+        public static float Kp = 0.1f;
+        public static float Ki = 0.1f;
+        public static float Kd = 0.05f;
+        public static int outputUpperLimit = 50;
+        public static int outputLowerLimit = -50;
 
         public override async Task Run() {
             if (count == 0) {
@@ -88,13 +88,17 @@ namespace TemperatureWarriorCode {
         public static void StartRound() {
 
             // Initialize PID controller
-            PID pidController = new PID(Kp, Ki, Kd, N, outputUpperLimit, outputLowerLimit);
+            StandardPidController standardPidController = new StandardPidController();
+            standardPidController.OutputMax = outputUpperLimit;
+            standardPidController.OutputMin = outputLowerLimit;
+            //standardPidController.TargetInput = DESIRED_TEMP;
+            standardPidController.ProportionalComponent = Kp;
+            standardPidController.IntegralComponent = Ki;
+            standardPidController.DerivativeComponent = Kd;
+            //standardPidController.ActualInput = float.Parse(Data.temp_act);
 
             //Desired temp and voltage value
             double voltage;
-            //double MIN_TEMP = 0;
-            //double MAX_TEMP = 0;
-            double DESIRED_TEMP = (MAX_TEMP - MIN_TEMP) / 2;
             bool is_heating = false;
             bool is_cooling = false;
             bool first_call = true;
@@ -121,7 +125,7 @@ namespace TemperatureWarriorCode {
             //define ranges
             for (int i = 0; i < Data.temp_min.Length; i++) {
                 Console.WriteLine(Data.temp_max[i]);
-                temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data.round_time[i]) * 1000);
+                temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data. [i]) * 1000);
                 total_time += int.Parse(Data.round_time[i]);
             }
             
@@ -146,20 +150,13 @@ namespace TemperatureWarriorCode {
                 //This is the time refresh we did not do before
                 Thread.Sleep(Data.refresh - sleep_time);
 
-                //PID Controller time span
-                if (first_call == true) {
-                    // For default time span in first call
-                    time_span = TimeSpan.FromSeconds(0);
-                    first_call = false;
-                } else {
-                    // For the rest of the calls
-                    time_span = timer.Elapsed;
-                    timer.Restart();
-                }
+                // Get current target temperature (Getting min and max temp and getting mean value)
 
-                // PID Controller
-                double output = pidController.PID_iterate(DESIRED_TEMP, double.Parse(Data.temp_act), time_span);
-                Console.WriteLine($"Output={output}");
+                // Get actual sensor temperature
+                standardPidController.ActualInput = float.Parse(Data.temp_act);
+
+                // Get output from PID controller
+                float output = standardPidController.CalculateControlOutput();
 
                 //Get voltage to apply
                 if (output > 0) {
@@ -180,7 +177,7 @@ namespace TemperatureWarriorCode {
                     is_cooling = false;
                 }
 
-                //Update controller with the new voltage
+                // Update controller with the new voltage
 
 
                 //Temperature registration
@@ -191,7 +188,7 @@ namespace TemperatureWarriorCode {
             }
             Console.WriteLine("Round Finish");
             // Reset PID controller
-            pidController.ResetController();
+            standardPidController.ResetIntegrator();
             t.Abort();
 
             total_time_in_range += timeController.TimeInRangeInMilliseconds;
