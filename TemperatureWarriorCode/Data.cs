@@ -20,6 +20,7 @@ namespace TemperatureWarriorCode {
         public static string temp_act = "0"; // In ºC
         public static int time_left; // in s
         public static int time_in_range_temp = 0; //In ms.
+        public static int current_period = 0; //Period of the round
                                            
         //COLORS FOR DISPLAY
         public static Color[] colors = new Color[4]

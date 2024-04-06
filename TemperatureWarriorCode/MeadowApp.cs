@@ -88,21 +88,19 @@ namespace TemperatureWarriorCode {
         public static void StartRound() {
 
             // Initialize PID controller
-            StandardPidController standardPidController = new StandardPidController();
-            standardPidController.OutputMax = outputUpperLimit;
-            standardPidController.OutputMin = outputLowerLimit;
-            //standardPidController.TargetInput = DESIRED_TEMP;
-            standardPidController.ProportionalComponent = Kp;
-            standardPidController.IntegralComponent = Ki;
-            standardPidController.DerivativeComponent = Kd;
-            //standardPidController.ActualInput = float.Parse(Data.temp_act);
+            StandardPidController standardPidController = new StandardPidController
+            {
+                OutputMax = outputUpperLimit,
+                OutputMin = outputLowerLimit,
+                ProportionalComponent = Kp,
+                IntegralComponent = Ki,
+                DerivativeComponent = Kd
+            };
 
-            //Desired temp and voltage value
-            double voltage;
+            //Controller variables
+            bool is_on = false;
             bool is_heating = false;
             bool is_cooling = false;
-            bool first_call = true;
-            TimeSpan time_span;
 
             Stopwatch timer = Stopwatch.StartNew();
             timer.Start();
@@ -151,6 +149,9 @@ namespace TemperatureWarriorCode {
                 Thread.Sleep(Data.refresh - sleep_time);
 
                 // Get current target temperature (Getting min and max temp and getting mean value)
+                float min_temp = float.Parse(Data.temp_min[Data.current_period]);
+                float max_temp = float.Parse(Data.temp_max[Data.current_period]);
+                standardPidController.TargetInput = (min_temp + max_temp) / 2;
 
                 // Get actual sensor temperature
                 standardPidController.ActualInput = float.Parse(Data.temp_act);
@@ -159,20 +160,20 @@ namespace TemperatureWarriorCode {
                 float output = standardPidController.CalculateControlOutput();
 
                 //Get voltage to apply
-                if (output > 0) {
+                if (output > 2) {
                     //Heating
-                    voltage = INITIAL_VOL + output;
+                    is_on = true;
                     is_heating = true;
                     is_cooling = false;
-                } else if (output < 0) {
+                } else if (output < -2) {
                     //Cooling
-                    voltage = INITIAL_VOL + output;
+                    is_on = true;
                     is_heating = false;
                     is_cooling = true;
                 // PONER RANGO DE OUTPUT EN EL QUE SE DEBE PARAR DE CALENTAR Y ENFRIAR
                 } else {
                     //Stop heating or cooling
-                    voltage = 0;
+                    is_on = false;
                     is_heating = false;
                     is_cooling = false;
                 }
@@ -204,6 +205,7 @@ namespace TemperatureWarriorCode {
             Data.is_working = true;
             for (int i = 0; i < Data.round_time.Length; i++) {
                 Data.time_left = int.Parse(Data.round_time[i]);
+                Data.current_period = i;
 
                 while (Data.time_left > 0) {
                     Data.time_left--;
