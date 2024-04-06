@@ -281,22 +281,7 @@ namespace TemperatureWarriorCode.Web {
             "</head>" +
 
             "<body>" +
-                            "<script> function save(){{" +
-                            "console.log(\"Calling Save in JS!!\");" +
-                            "var tempMax = document.forms['params']['tempMax'].value;" +
-                            "var tempMin = document.forms['params']['tempMin'].value;" +
-                            "var displayRefresh = document.forms['params']['displayRefresh'].value;" +
-                            "var refresh = document.forms['params']['refresh'].value;" +
-                            "var time = document.forms['params']['time'].value;" +
-                            "var pass = document.forms['params']['pass'].value;" +
-                            "location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh + '&refresh=' + refresh + '&time=' + time + '&pass=' + pass;" +
-                            "}} " +
-                            "function temp(){{" +
-                            "console.log(\"Calling temp in JS!!\");" +
-                            "location.href = 'temp'" +
-                            "}} " + 
-                            "function start(){{location.href = 'start'}}" +
-                            "</script>" +
+                           
 
                             "<div class='tm-main-content' id='top'>" +
                             "<div class='tm-top-bar-bg'></div>" +
@@ -316,29 +301,49 @@ namespace TemperatureWarriorCode.Web {
                             "<div class='row'>" +
                             "<div class='col-xs-12 ml-auto mr-auto ie-container-width-fix'>" +
                             "<form name='params' method = 'get' class='tm-search-form tm-section-pad-2'>" +
-                            "<div class='form-row tm-search-form-row'>" +
-                            "<div class='form-group tm-form-element tm-form-element-100'>" +
-                            "<p>Temperatura Max <b>(&deg;C)</b> <input name='tempMax' type='text' class='form-control' value='" + mostarDatos(Data.temp_max) + "' " + disabled + "></input></p>" +
-                            "</div>" +
-                            "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            "<p>Temperatura Min <b>(&deg;C)</b> <input name='tempMin' type='text' class='form-control' value='" + mostarDatos(Data.temp_min) + "' " + disabled + "></input></p>" +
-                            "</div>" +
-                            "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            "<p>Duraci&oacute;n Ronda <b>(s)</b> <input name='time' type='text' class='form-control' value='" + mostarDatos(Data.round_time) + "' " + disabled + "></input></p>" +
-                            "</div>" +
-                            "</div>" +
-                            "<div class='form-row tm-search-form-row'>" +
-                            "<div class='form-group tm-form-element tm-form-element-100'>" +
-                            "<p>Cadencia Refresco <b>(ms)</b> <input name='displayRefresh' type='number' class='form-control' value='" + Data.display_refresh + "' " + disabled + "></input></p>" +
-                            "</div>" +
-                            "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            "<p>Cadencia Interna <b>(ms)</b> <input name='refresh' type='number' class='form-control' value='" + Data.refresh + "' " + disabled + "></input></p>" +
-                            "</div>" +
-                            "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            "<p>Contrase&ntilde;a <input name='pass' type='password' class='form-control'> </input></p>" +
-                            "</div>" +
-
-                            "</form>" +
+    "                            <label for='numero'>Selecciona un número:</label>" +
+    "                            <select id='numero'>" +
+    "                                <option value=''>Seleccione...</option>" +
+    "                                <option value=1>1</option>" +
+    "                                <option value=2>2</option>" +
+    "                                <option value=3>3</option>" +
+    "                                <option value=4>4</option>" +
+    "                                <option value=5>5</option>" +
+    "                                <option value=6>6</option>" +
+    "                                <option value=7>7</option>" +
+    "                                <option value=8>8</option>" +
+    "                                <option value=9>9</option>" +
+    "                                <option value=10>10</option>" +
+    "                            </select>" +
+    "                            <div class='form-row tm-search-form-row'>" +
+    "                                <div class='form-group tm-form-element tm-form-element-100'>" +
+    "                                    <p>Temperatura Max <b>(&deg;C)</b>" +
+    "                                        <div id='tempMax'></div>" +
+    "                                    </p>" +
+    "                                </div>" +
+    "                                <div class='form-group tm-form-element tm-form-element-50'>" +
+    "                                    <p>Temperatura Min <b>(&deg;C)</b>" +
+    "                                        <div id='tempMin'></div>" +
+    "                                    </p>" +
+    "                                </div>" +
+    "                                <div class='form-group tm-form-element tm-form-element-50'>" +
+    "                                    <p>Duraci&oacute;n Ronda <b>(s)</b>" +
+    "                                        <div id='duracion'></div>" +
+    "                                    </p>" +
+    "                                </div>" +
+    "                            </div>" +
+    "                            <div class='form-row tm-search-form-row'>" +
+    "                                <div class='form-group tm-form-element tm-form-element-100'>" +
+    "                                    <p>Cadencia Refresco <b>(ms)</b>" +
+    "                                        <input name='displayRefresh' type='number' class='form-control' value='></input>" +
+    "" +
+    "                                    </p>" +
+    "                                </div>" +
+    "                                <div class='form-group tm-form-element tm-form-element-50'>" +
+    "                                    <p>Contrase&ntilde;a <input name='pass' type='password' class='form-control'></input></p>" +
+    "                                </div>" +
+    "                            </div>" +
+    "                        </form>" +
                             "<div class='form-group tm-form-element tm-form-element-50'>" +
                             save + start +
                             "</div>" +
@@ -356,6 +361,81 @@ namespace TemperatureWarriorCode.Web {
                             "<div class='container ie-h-align-center-fix'>" +
                             graph +
                             "</div>" +
+                            
+                            
+                            "<script>"+
+                            
+                        "        var select = document.getElementById('numero');" +
+                        "        select.addEventListener('change', function() {" +
+                        "            var selectedOption = this.options[this.selectedIndex].value;" +
+                        "            var tempMax = document.getElementById('tempMax');" +
+                        "            var tempMin = document.getElementById('tempMin');" +
+                        "            var duracion = document.getElementById('duracion');" +
+                        "" +
+                        "            tempMax.innerHTML = '';" +
+                        "            tempMin.innerHTML = '';" +
+                        "            duracion.innerHTML = '';" +
+                        "            for (var i=0; i<selectedOption; i++) {" +
+                        "                var tempMaxinput = document.createElement('input');" +
+                        "                tempMaxinput.type = 'number';" +
+                        "                tempMaxinput.name = 'tempMax' + i;" +
+                        "                tempMaxinput.className = 'form-control';" +
+                        "                tempMaxinput.value = '';" +
+                        "                tempMax.innerHTML += tempMaxinput.outerHTML;" +
+                        "" +
+                        "                var tempMininput = document.createElement('input');" +
+                        "                tempMininput.type = 'number';" +
+                        "                tempMininput.name = 'tempMin' + i;" +
+                        "                tempMininput.className = 'form-control';" +
+                        "                tempMininput.value = '';" +
+                        "                tempMin.innerHTML += tempMininput.outerHTML;" +
+                        "" +
+                        "                var duracioninput = document.createElement('input');" +
+                        "                duracioninput.type = 'number';" +
+                        "                duracioninput.name = 'duracion' + i;" +
+                        "                duracioninput.className = 'form-control';" +
+                        "                duracioninput.value = '';" +
+                        "                duracion.innerHTML += duracioninput.outerHTML;" +
+                        "            }" +
+                        "            tempMax.innerHTML += '';" +
+                        "" +
+                        "        });" +
+               
+                            
+                            "function save(){{" +
+                            "console.log(\"Calling Save in JS!!\");" +
+                                "            var tempMax = [];" +
+                                "            var length = (document.forms['params'].length)/3-1;" +
+                                "            console.log(length);" +
+                                "            for (var i = 0; i <= length-1; i++) {" +
+                                "                if (document.getElementsByName('tempMax' + i).value != '){" +
+                                "                    tempMax.push(parseInt(document.getElementsByName('tempMax' + i)[0].value));" +
+                                "                }" +
+                                "            }" +
+                                "" +
+                                "            var tempMin = [];" +
+                                "            for (var i = 0; i <= length-1; i++) {" +
+                                "                if (document.getElementsByName('tempMin' + i).value != '){" +
+                                "                    tempMin.push(parseInt(document.getElementsByName('tempMin' + i)[0].value));" +
+                                "                }" +
+                                "            }" +
+                                "" +
+                                "            var time = [];" +
+                                "            for (var i = 0; i <= length-1; i++) {" +
+                                "                if (document.getElementsByName('duracion' + i).value != '){" +
+                                "                    time.push(parseInt(document.getElementsByName('duracion' + i)[0].value));" +
+                                "                }" +
+                                "            }" +
+                            "var displayRefresh = document.forms['params']['displayRefresh'].value;" +
+                            "var pass = document.forms['params']['pass'].value;" +
+                            "location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh + '&refresh=' + refresh + '&time=' + time + '&pass=' + pass;" +
+                            "}} " +
+                            "function temp(){{" +
+                            "console.log(\"Calling temp in JS!!\");" +
+                            "location.href = 'temp'" +
+                            "}} " + 
+                            "function start(){{location.href = 'start'}}" +
+                            "</script>" +
             "</body>" +
             "</html>";
             return html;
