@@ -1,6 +1,3 @@
-//Quiero hacer un programa a parte para encender y apagar el rele cada 2 segundos,
-// para entender como se hace el código de programación esta relacionado con este meadowApp, donde se usa una placa meadow
-
 using System.Threading.Tasks;
 using Meadow;
 using Meadow.Devices;
