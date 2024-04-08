@@ -123,7 +123,7 @@ namespace TemperatureWarriorCode {
             //define ranges
             for (int i = 0; i < Data.temp_min.Length; i++) {
                 Console.WriteLine(Data.temp_max[i]);
-                temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data. [i]) * 1000);
+                temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data.round_time[i]) * 1000);
                 total_time += int.Parse(Data.round_time[i]);
             }
             
