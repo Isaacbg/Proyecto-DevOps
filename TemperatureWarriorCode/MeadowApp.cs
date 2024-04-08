@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using TemperatureWarriorCode.Web;
 using NETDuinoWar;
+using Meadow.Foundation.Controllers.Pid;
 
 
 namespace TemperatureWarriorCode {
@@ -31,6 +32,13 @@ namespace TemperatureWarriorCode {
         public static int total_time_out_of_range = 0;
 
         public int count = 0;
+
+        //Initialize PID controller with appropriate gains and limits
+        public static float Kp = 0.1f;
+        public static float Ki = 0.1f;
+        public static float Kd = 0.05f;
+        public static int outputUpperLimit = 50;
+        public static int outputLowerLimit = -50;
 
         public override async Task Run() {
             if (count == 0) {
@@ -79,6 +87,21 @@ namespace TemperatureWarriorCode {
         //TW Combat Round
         public static void StartRound() {
 
+            // Initialize PID controller
+            StandardPidController standardPidController = new StandardPidController
+            {
+                OutputMax = outputUpperLimit,
+                OutputMin = outputLowerLimit,
+                ProportionalComponent = Kp,
+                IntegralComponent = Ki,
+                DerivativeComponent = Kd
+            };
+
+            //Controller variables
+            bool is_on = false;
+            bool is_heating = false;
+            bool is_cooling = false;
+
             Stopwatch timer = Stopwatch.StartNew();
             timer.Start();
 
@@ -100,7 +123,7 @@ namespace TemperatureWarriorCode {
             //define ranges
             for (int i = 0; i < Data.temp_min.Length; i++) {
                 Console.WriteLine(Data.temp_max[i]);
-                temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data.round_time[i]) * 1000);
+                temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data. [i]) * 1000);
                 total_time += int.Parse(Data.round_time[i]);
             }
             
@@ -125,6 +148,39 @@ namespace TemperatureWarriorCode {
                 //This is the time refresh we did not do before
                 Thread.Sleep(Data.refresh - sleep_time);
 
+                // Get current target temperature (Getting min and max temp and getting mean value)
+                float min_temp = float.Parse(Data.temp_min[Data.current_period]);
+                float max_temp = float.Parse(Data.temp_max[Data.current_period]);
+                standardPidController.TargetInput = (min_temp + max_temp) / 2;
+
+                // Get actual sensor temperature
+                standardPidController.ActualInput = float.Parse(Data.temp_act);
+
+                // Get output from PID controller
+                float output = standardPidController.CalculateControlOutput();
+
+                //Get voltage to apply
+                if (output > 2) {
+                    //Heating
+                    is_on = true;
+                    is_heating = true;
+                    is_cooling = false;
+                } else if (output < -2) {
+                    //Cooling
+                    is_on = true;
+                    is_heating = false;
+                    is_cooling = true;
+                // PONER RANGO DE OUTPUT EN EL QUE SE DEBE PARAR DE CALENTAR Y ENFRIAR
+                } else {
+                    //Stop heating or cooling
+                    is_on = false;
+                    is_heating = false;
+                    is_cooling = false;
+                }
+
+                // Update controller with the new voltage
+
+
                 //Temperature registration
                 Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
                 timeController.RegisterTemperature(double.Parse(Data.temp_act));
@@ -132,6 +188,8 @@ namespace TemperatureWarriorCode {
 
             }
             Console.WriteLine("Round Finish");
+            // Reset PID controller
+            standardPidController.ResetIntegrator();
             t.Abort();
 
             total_time_in_range += timeController.TimeInRangeInMilliseconds;
@@ -147,6 +205,7 @@ namespace TemperatureWarriorCode {
             Data.is_working = true;
             for (int i = 0; i < Data.round_time.Length; i++) {
                 Data.time_left = int.Parse(Data.round_time[i]);
+                Data.current_period = i;
 
                 while (Data.time_left > 0) {
                     Data.time_left--;
