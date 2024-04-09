@@ -19,14 +19,14 @@ namespace TemperatureWarriorCode
         // Function to turn on the relay
         public async Task TurnOn()
         {
-            relayPort.State = true;
+            relayPort.State = true; // NO
             Console.WriteLine("Relay On");
         }
 
         // Function to turn off the relay
         public async Task TurnOff()
         {
-            relayPort.State = false;
+            relayPort.State = false; // NC
             Console.WriteLine("Relay Off");
         }
 
