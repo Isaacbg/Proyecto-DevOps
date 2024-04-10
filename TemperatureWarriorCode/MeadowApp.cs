@@ -98,19 +98,14 @@ namespace TemperatureWarriorCode {
             };
 
             // Initialize reles
-            Rele rele_switch = new Rele(Device.Pins.D02);
-            Rele rele1 = new Rele(Device.Pins.D03);
-            Rele rele2 = new Rele(Device.Pins.D04);
+            Rele rele_switch = new Rele(Device.CreateDigitalOutputPort(Device.Pins.D02));
+            Rele rele1 = new Rele(Device.CreateDigitalOutputPort(Device.Pins.D03));
+            Rele rele2 = new Rele(Device.CreateDigitalOutputPort(Device.Pins.D04));
 
             // Turn on the relay
             rele_switch.TurnOn();
 
             // Change polarity of the relay
-            
-
-
-            
-            
 
             //Controller variables
 
@@ -138,7 +133,6 @@ namespace TemperatureWarriorCode {
 
             //define ranges
             for (int i = 0; i < Data.temp_min.Length; i++) {
-                Console.WriteLine(Data.temp_max[i]);
                 temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data.round_time[i]) * 1000);
                 total_time += int.Parse(Data.round_time[i]);
             }
@@ -169,12 +163,13 @@ namespace TemperatureWarriorCode {
                 float max_temp = float.Parse(Data.temp_max[Data.current_period]);
                 standardPidController.TargetInput = (min_temp + max_temp) / 2;
 
+                Console.WriteLine("Temp: "+ Data.temp_act.ToString());
                 // Get actual sensor temperature
                 standardPidController.ActualInput = float.Parse(Data.temp_act);
 
                 // Get output from PID controller
                 float output = standardPidController.CalculateControlOutput();
-
+                Console.WriteLine("PID: " + output.ToString());
                 //Get voltage to apply
                 if (output > 2) {
                     rele_switch.TurnOn();
@@ -224,6 +219,7 @@ namespace TemperatureWarriorCode {
 
             }
             Console.WriteLine("Round Finish");
+            rele_switch.TurnOff();
             // Reset PID controller
             standardPidController.ResetIntegrator();
             t.Abort();
@@ -256,7 +252,7 @@ namespace TemperatureWarriorCode {
 
            Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
 
-           Console.WriteLine($"Temperature={Data.temp_act}");
+           //Console.WriteLine($"Temperature={Data.temp_act}");
         }
 
         void WiFiAdapter_WiFiConnected(object sender, EventArgs e) {
