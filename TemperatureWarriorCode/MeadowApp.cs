@@ -109,7 +109,6 @@ namespace TemperatureWarriorCode {
 
             //Controller variables
 
-            bool is_on = false;
             bool is_heating = false;
             bool is_cooling = false;
 
@@ -183,7 +182,6 @@ namespace TemperatureWarriorCode {
                         rele_switch.TurnOn();
                     }
                     //Heating
-                    is_on = true;
                     is_heating = true;
                     is_cooling = false;
                 } else if (output < -2) {
@@ -197,13 +195,10 @@ namespace TemperatureWarriorCode {
                         rele_switch.TurnOn();
                     }
                     //Cooling
-                    is_on = true;
                     is_heating = false;
                     is_cooling = true;
-                // PONER RANGO DE OUTPUT EN EL QUE SE DEBE PARAR DE CALENTAR Y ENFRIAR
                 } else {
                     //Stop heating or cooling
-                    is_on = false;
                     is_heating = false;
                     is_cooling = false;
                     rele_switch.TurnOff();
