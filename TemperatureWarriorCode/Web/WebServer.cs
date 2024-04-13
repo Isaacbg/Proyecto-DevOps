@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TemperatureWarriorCode.Web {
     public class WebServer {
@@ -266,178 +267,176 @@ namespace TemperatureWarriorCode.Web {
 
             //Write the HTML page
             string html = "<!DOCTYPE html>" +
-            "<html>" +
-            "<head>" +
-                            "<meta charset='utf - 8'>" +
-                            "<meta http - equiv = 'X-UA-Compatible' content = 'IE=edge'>" +
-                            "<meta name = 'viewport' content = 'width=device-width, initial-scale=1' > " +
-                            "<title>Meadow Controller</title>" +
-                            "<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700'>" +
-                            "<link rel = 'stylesheet' href = 'http://127.0.0.1:8887/css/bootstrap.min.css'>" +
-                            "<link rel = 'stylesheet' href = 'http://127.0.0.1:8887/css/tooplate-style.css' >" +
-                            "<script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.js'> </script>" +
+"<html>" +
+"<head>" +
+                "<meta charset='utf - 8'>" +
+                "<meta http - equiv = 'X-UA-Compatible' content = 'IE=edge'>" +
+                "<meta name = 'viewport' content = 'width=device-width, initial-scale=1' > " +
+                "<title>Meadow Controller</title>" +
+                "<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700'>" +
+                "<link rel = 'stylesheet' href = 'http://127.0.0.1:8887/css/bootstrap.min.css'>" +
+                "<link rel = 'stylesheet' href = 'http://127.0.0.1:8887/css/tooplate-style.css' >" +
+                "<script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.js'> </script>" +
 
 
-            "</head>" +
+"</head>" +
 
-            "<body>" +
-                           
+        "<body>" +
 
-                            "<div class='tm-main-content' id='top'>" +
-                            "<div class='tm-top-bar-bg'></div>" +
-                            "<div class='container'>" +
-                            "<div class='row'>" +
-                            "<nav class='navbar navbar-expand-lg narbar-light'>" +
-                            "<a class='navbar-brand mr-auto' href='#'>" +
-                            "<img id='logo' class='logo' src='http://127.0.0.1:8887/img/6.webp' alt='Site logo' width='700' height='300'>" +
-                            "</a>" +
-                            "</nav>" +
-                            "</div>" +
-                            "</div>" +
-                            "</div>" +
-                            "<div class='tm-section tm-bg-img' id='tm-section-1'>" +
-                            "<div class='tm-bg-white ie-container-width-fix-2'>" +
-                            "<div class='container ie-h-align-center-fix'>" +
-                            "<div class='row'>" +
-                            "<div class='col-xs-12 ml-auto mr-auto ie-container-width-fix'>" +
-                            "<form name='params' method = 'get' class='tm-search-form tm-section-pad-2'>" +
-    "                            <label for='numero'>Selecciona un número:</label>" +
-    "                            <select id='numero'>" +
-    "                                <option value=''>Seleccione...</option>" +
+
+                        "<div class='tm-main-content' id='top'>" +
+                        "<div class='tm-top-bar-bg'></div>" +
+                        "<div class='container'>" +
+                        "<div class='row'>" +
+                        "<nav class='navbar navbar-expand-lg narbar-light'>" +
+                        "<a class='navbar-brand mr-auto' href='#'>" +
+                        "<img id='logo' class='logo' src='http://127.0.0.1:8887/img/6.webp' alt='Site logo' width='700' height='300'>" +
+                        "</a>" +
+                        "</nav>" +
+                        "</div>" +
+                        "</div>" +
+                        "</div>" +
+                        "<div class='tm-section tm-bg-img' id='tm-section-1'>" +
+                        "<div class='tm-bg-white ie-container-width-fix-2'>" +
+                        "<div class='container ie-h-align-center-fix'>" +
+                        "<div class='row'>" +
+                        "<div class='col-xs-12 ml-auto mr-auto ie-container-width-fix'>" +
+                        "<form name='params' method = 'get' class='tm-search-form tm-section-pad-2'>" +
+   "                            <label for='numero'>Selecciona un número:</label>" +
+   "                            <select id='numero'>" +
+   "                                <option value=''>Seleccione...</option>" +
     "                                <option value=1>1</option>" +
-    "                                <option value=2>2</option>" +
-    "                                <option value=3>3</option>" +
-    "                                <option value=4>4</option>" +
-    "                                <option value=5>5</option>" +
-    "                                <option value=6>6</option>" +
-    "                                <option value=7>7</option>" +
-    "                                <option value=8>8</option>" +
-    "                                <option value=9>9</option>" +
-    "                                <option value=10>10</option>" +
-    "                            </select>" +
-    "                            <div class='form-row tm-search-form-row'>" +
-    "                                <div class='form-group tm-form-element tm-form-element-100'>" +
-    "                                    <p>Temperatura Max <b>(&deg;C)</b>" +
-    "                                        <div id='tempMax'></div>" +
-    "                                    </p>" +
-    "                                </div>" +
-    "                                <div class='form-group tm-form-element tm-form-element-50'>" +
-    "                                    <p>Temperatura Min <b>(&deg;C)</b>" +
-    "                                        <div id='tempMin'></div>" +
-    "                                    </p>" +
-    "                                </div>" +
-    "                                <div class='form-group tm-form-element tm-form-element-50'>" +
-    "                                    <p>Duraci&oacute;n Ronda <b>(s)</b>" +
-    "                                        <div id='duracion'></div>" +
-    "                                    </p>" +
-    "                                </div>" +
-    "                            </div>" +
-    "                            <div class='form-row tm-search-form-row'>" +
-    "                                <div class='form-group tm-form-element tm-form-element-100'>" +
-    "                                    <p>Cadencia Refresco <b>(ms)</b>" +
-    "                                        <input name='displayRefresh' type='number' class='form-control' value='></input>" +
-    "" +
-    "                                    </p>" +
-    "                                </div>" +
-    "                                <div class='form-group tm-form-element tm-form-element-50'>" +
-    "                                    <p>Contrase&ntilde;a <input name='pass' type='password' class='form-control'></input></p>" +
-    "                                </div>" +
-    "                            </div>" +
-    "                        </form>" +
-                            "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            save + start +
-                            "</div>" +
-                            "<div class='form-group tm-form-element tm-form-element-50'>" +
-                            temp +
-                            "</div>" +
-                            "</div>" +
-                            "<p style='text-align:center;font-weight:bold;'>" + message + "</p>" +
-                            "</div>" +
-                            "</div>" +
-                            "</div>" +
-                            "</div>" +
-                            "</div>" +
+"                                <option value=2>2</option>" +
+"                                <option value=3>3</option>" +
+"                                <option value=4>4</option>" +
+"                                <option value=5>5</option>" +
+"                                <option value=6>6</option>" +
+"                                <option value=7>7</option>" +
+"                                <option value=8>8</option>" +
+"                                <option value=9>9</option>" +
+"                                <option value=10>10</option>" +
+"                            </select>" +
+"                            <div class='form-row tm-search-form-row'>" +
+"                                <div class='form-group tm-form-element tm-form-element-100'>" +
+"                                    <p>Temperatura Max <b>(&deg;C)</b>" +
+"                                        <div id='tempMax'></div>" +
+"                                    </p>" +
+"                                </div>" +
+"                                <div class='form-group tm-form-element tm-form-element-50'>" +
+"                                    <p>Temperatura Min <b>(&deg;C)</b>" +
+"                                        <div id='tempMin'></div>" +
+"                                    </p>" +
+"                                </div>" +
+"                                <div class='form-group tm-form-element tm-form-element-50'>" +
+"                                    <p>Duraci&oacute;n Ronda <b>(s)</b>" +
+"                                        <div id='duracion'></div>" +
+"                                    </p>" +
+"                                </div>" +
+"                            </div>" +
+"                            <div class='form-row tm-search-form-row'>" +
+"                                <div class='form-group tm-form-element tm-form-element-100'>" +
+"                                    <p>Cadencia Refresco <b>(ms)</b>" +
+"                                        <input name='displayRefresh' type='string' class='form-control' value=''></input>" +
+"" +
+"                                    </p>" +
+"                                </div>" +
+"                                <div class='form-group tm-form-element tm-form-element-50'>" +
+"                                    <p>Contrase&ntilde;a <input name='pass' type='password' class='form-control'></input></p>" +
+"                                </div>" +
+"                            </div>" +
+"                        </form>" +
+                        "<div class='form-group tm-form-element tm-form-element-50'>" +
+                        save + start +
+                        "</div>" +
+                        "<div class='form-group tm-form-element tm-form-element-50'>" +
+                        temp +
+                        "</div>" +
+                        "</div>" +
+                        "<p style='text-align:center;font-weight:bold;'>" + message + "</p>" +
+                        "</div>" +
+                        "</div>" +
+                        "</div>" +
+                        "</div>" +
+                        "</div>" +
 
-                            "<div class='container ie-h-align-center-fix'>" +
-                            graph +
-                            "</div>" +
-                            
-                            
-                            "<script>"+
-                            
-                        "        var select = document.getElementById('numero');" +
-                        "        select.addEventListener('change', function() {" +
-                        "            var selectedOption = this.options[this.selectedIndex].value;" +
-                        "            var tempMax = document.getElementById('tempMax');" +
-                        "            var tempMin = document.getElementById('tempMin');" +
-                        "            var duracion = document.getElementById('duracion');" +
-                        "" +
-                        "            tempMax.innerHTML = '';" +
-                        "            tempMin.innerHTML = '';" +
-                        "            duracion.innerHTML = '';" +
-                        "            for (var i=0; i<selectedOption; i++) {" +
-                        "                var tempMaxinput = document.createElement('input');" +
-                        "                tempMaxinput.type = 'number';" +
-                        "                tempMaxinput.name = 'tempMax' + i;" +
-                        "                tempMaxinput.className = 'form-control';" +
-                        "                tempMaxinput.value = '';" +
-                        "                tempMax.innerHTML += tempMaxinput.outerHTML;" +
-                        "" +
-                        "                var tempMininput = document.createElement('input');" +
-                        "                tempMininput.type = 'number';" +
-                        "                tempMininput.name = 'tempMin' + i;" +
-                        "                tempMininput.className = 'form-control';" +
-                        "                tempMininput.value = '';" +
-                        "                tempMin.innerHTML += tempMininput.outerHTML;" +
-                        "" +
-                        "                var duracioninput = document.createElement('input');" +
-                        "                duracioninput.type = 'number';" +
-                        "                duracioninput.name = 'duracion' + i;" +
-                        "                duracioninput.className = 'form-control';" +
-                        "                duracioninput.value = '';" +
-                        "                duracion.innerHTML += duracioninput.outerHTML;" +
-                        "            }" +
-                        "            tempMax.innerHTML += '';" +
-                        "" +
-                        "        });" +
-               
-                            
-                            "function save(){{" +
-                            "console.log(\"Calling Save in JS!!\");" +
-                                "            var tempMax = [];" +
-                                "            var length = (document.forms['params'].length)/3-1;" +
-                                "            console.log(length);" +
-                                "            for (var i = 0; i <= length-1; i++) {" +
-                                "                if (document.getElementsByName('tempMax' + i).value != '){" +
-                                "                    tempMax.push(parseInt(document.getElementsByName('tempMax' + i)[0].value));" +
-                                "                }" +
-                                "            }" +
-                                "" +
-                                "            var tempMin = [];" +
-                                "            for (var i = 0; i <= length-1; i++) {" +
-                                "                if (document.getElementsByName('tempMin' + i).value != '){" +
-                                "                    tempMin.push(parseInt(document.getElementsByName('tempMin' + i)[0].value));" +
-                                "                }" +
-                                "            }" +
-                                "" +
-                                "            var time = [];" +
-                                "            for (var i = 0; i <= length-1; i++) {" +
-                                "                if (document.getElementsByName('duracion' + i).value != '){" +
-                                "                    time.push(parseInt(document.getElementsByName('duracion' + i)[0].value));" +
-                                "                }" +
-                                "            }" +
-                            "var displayRefresh = document.forms['params']['displayRefresh'].value;" +
-                            "var pass = document.forms['params']['pass'].value;" +
-                            "location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh + '&refresh=' + refresh + '&time=' + time + '&pass=' + pass;" +
-                            "}} " +
-                            "function temp(){{" +
-                            "console.log(\"Calling temp in JS!!\");" +
-                            "location.href = 'temp'" +
-                            "}} " + 
-                            "function start(){{location.href = 'start'}}" +
-                            "</script>" +
-            "</body>" +
-            "</html>";
+                        "<div class='container ie-h-align-center-fix'>" +
+                        graph +
+                        "</div>" +
+
+
+                        "<script>" +
+
+                    "        var select = document.getElementById('numero');" +
+                    "        select.addEventListener('change', function() {{" +
+                    "            var selectedOption = select.value;" +
+                    "            var tempMax = document.getElementById('tempMax');" +
+                    //"            var tempMin = document.getElementById('tempMin');" +
+                    //                    "            var duracion = document.getElementById('duracion');" +
+                    //                    "" +
+                    "            tempMax.innerHTML = '';" +
+                    "console.log(tempMax);" +
+                    "console.log(selectedOption);" +
+                    //                    "            tempMin.innerHTML = '';" +
+                    //                    "            duracion.innerHTML = '';" +
+                    "            for (var i=0; i<selectedOption; i++) {{" +
+                    "                var tempMaxinput = '<input name=`tempMax'+ i + '`></input>'; " +
+                    " console.log(tempMaxinput);" +
+                    "                tempMax.innerHTML += tempMaxinput;" +
+                    "" +
+                    //                    "                var tempMininput = document.createElement('input');" +
+                    //                    "                tempMininput.type = 'string';" +
+                    //                    "                tempMininput.name = 'tempMin' + i;" +
+                    //                    "                tempMininput.className = 'form-control';" +
+                    //                    "                tempMininput.value = '';" +
+                    //                    "                tempMin.innerHTML += tempMininput.outerHTML;" +
+                    //                    "" +
+                    //                    "                var duracioninput = document.createElement('input');" +
+                    //                    "                duracioninput.type = 'string';" +
+                    //                    "                duracioninput.name = 'duracion' + i;" +
+                    //                    "                duracioninput.className = 'form-control';" +
+                    //                    "                duracioninput.value = '';" +
+                    //                    "                duracion.innerHTML += duracioninput.outerHTML;" +
+                    "            }}" +
+                    //                    "" +
+                    "        }});" +
+
+
+                                                "function save(){{" +
+                                                "console.log(\"Calling Save in JS!!\");" +
+                                                    "            var tempMax = [];" +
+                                                    "            var length = (document.forms['params'].length)/3-1;" +
+                                                    "            console.log(length);" +
+                                                    "            for (var i = 0; i <= length-1; i++) {{" +
+                                                    "                if (document.getElementsByName('tempMax' + i).value != ''){{" +
+                                                    "                    tempMax.push(parseInt(document.getElementsByName('tempMax' + i)[0].value));" +
+                                                    "                }}" +
+                                                    "            }}" +
+                                                //    "" +
+                                                //    "            var tempMin = [];" +
+                                                //    "            for (var i = 0; i <= length-1; i++) {" +
+                                                //    "                if (document.getElementsByName('tempMin' + i).value != '){" +
+                                                //    "                    tempMin.push(parseInt(document.getElementsByName('tempMin' + i)[0].value));" +
+                                                //    "                }" +
+                                                //    "            }" +
+                                                //    "" +
+                                                //    "            var time = [];" +
+                                                //    "            for (var i = 0; i <= length-1; i++) {" +
+                                                //    "                if (document.getElementsByName('duracion' + i).value != '){" +
+                                                //    "                    time.push(parseInt(document.getElementsByName('duracion' + i)[0].value));" +
+                                                //    "                }" +
+                                                //    "            }" +
+                                                //"var displayRefresh = document.forms['params']['displayRefresh'].value;" +
+                                                //"var pass = document.forms['params']['pass'].value;" +
+                                                //"location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh + '&refresh=' + refresh + '&time=' + time + '&pass=' + pass;" +
+                                                "}} " +
+                                                "function temp(){{" +
+                                                "console.log(\"Calling temp in JS!!\");" +
+                                                "location.href = 'temp'" +
+                                                "}} " +
+                                                "function start(){{location.href = 'start'}}" +
+                        "</script>" +
+"</body>" +
+"</html>";
             return html;
         }
 
