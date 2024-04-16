@@ -118,7 +118,7 @@ namespace TemperatureWarriorCode.Web {
                                 if (parameters?.Length >= 2) {
 
                                     // Param 5 => to pass
-                                    string[] pass_parts = parameters[5].Split('=');
+                                    string[] pass_parts = parameters[4].Split('=');
                                     string pass_temp = pass_parts[1];
 
                                     if (string.Equals(pass, pass_temp)) {
@@ -127,32 +127,27 @@ namespace TemperatureWarriorCode.Web {
                                         string[] temp_max_parts = parameters[0].Split('=');
                                         //string[] temp_max_final = temp_max_parts[1].Split(";");
                                         //Data.temp_max = new string[] { temp_max_parts[1].Split(";") };
-                                        Data.temp_max = temp_max_parts[1].Split(";");
+                                        Data.temp_max = temp_max_parts[1].Split(",");
 
 
                                         // Param 1 => Temp min
                                         string[] temp_min_parts = parameters[1].Split('=');
                                         //Data.temp_min = new string[] { temp_min_parts[1] };
                                         //Data.temp_min = new string[] { "12", "12" };
-                                        Data.temp_min = temp_min_parts[1].Split(";");
+                                        Data.temp_min = temp_min_parts[1].Split(",");
 
                                         // Param 2 => to display_refresh
                                         string[] display_refresh_parts = parameters[2].Split('=');
                                         Data.display_refresh = Int16.Parse(display_refresh_parts[1]);
                                         //Data.display_refresh = 1000;
-
-                                        // Param 3 => to refresh
-                                        string[] refresh_parts = parameters[3].Split('=');
-                                        Data.refresh = Int16.Parse(refresh_parts[1]);
-                                        //Data.refresh = 1000;
-                                        
+                                       
 
 
                                         // Param 4 => to round_time
-                                        string[] round_time_parts = parameters[4].Split('=');
+                                        string[] round_time_parts = parameters[3].Split('=');
                                         //Data.round_time = new string[] { round_time_parts[1] };
                                         //Data.round_time = new string[] { "5", "15" };
-                                        Data.round_time = round_time_parts[1].Split(";");
+                                        Data.round_time = round_time_parts[1].Split(",");
 
                                         if (!tempCheck(Data.temp_max, false) || !tempCheck(Data.temp_min, true)) {
                                             message = "El rango de temperatura m&aacute;ximo es entre 30 y 12 grados C.";
@@ -184,6 +179,7 @@ namespace TemperatureWarriorCode.Web {
                         ready = false;
 
                         message = "Se ha terminado la ronda con " + Data.time_in_range_temp + "s en el rango indicado.";
+
                     }
                     if (req.Url.AbsolutePath == "/temp") {
                         message = $"La temperatura actual es {Data.temp_act}";
@@ -363,39 +359,28 @@ namespace TemperatureWarriorCode.Web {
                         graph +
                         "</div>" +
 
-
+                        
                         "<script>" +
 
                     "        var select = document.getElementById('numero');" +
                     "        select.addEventListener('change', function() {{" +
                     "            var selectedOption = select.value;" +
                     "            var tempMax = document.getElementById('tempMax');" +
-                    //"            var tempMin = document.getElementById('tempMin');" +
-                    //                    "            var duracion = document.getElementById('duracion');" +
-                    //                    "" +
+                    "            var tempMin = document.getElementById('tempMin');" +
+                    "            var duracion = document.getElementById('duracion');" +
+
                     "            tempMax.innerHTML = '';" +
-                    "console.log(tempMax);" +
-                    "console.log(selectedOption);" +
-                    //                    "            tempMin.innerHTML = '';" +
-                    //                    "            duracion.innerHTML = '';" +
+                                        "            tempMin.innerHTML = '';" +
+                                        "            duracion.innerHTML = '';" +
                     "            for (var i=0; i<selectedOption; i++) {{" +
-                    "                var tempMaxinput = '<input name=`tempMax'+ i + '`></input>'; " +
-                    " console.log(tempMaxinput);" +
+                    "                var tempMaxinput = '<input name=tempMax'+ i + ' class=form-control></input>'; " +
                     "                tempMax.innerHTML += tempMaxinput;" +
                     "" +
-                    //                    "                var tempMininput = document.createElement('input');" +
-                    //                    "                tempMininput.type = 'string';" +
-                    //                    "                tempMininput.name = 'tempMin' + i;" +
-                    //                    "                tempMininput.className = 'form-control';" +
-                    //                    "                tempMininput.value = '';" +
-                    //                    "                tempMin.innerHTML += tempMininput.outerHTML;" +
-                    //                    "" +
-                    //                    "                var duracioninput = document.createElement('input');" +
-                    //                    "                duracioninput.type = 'string';" +
-                    //                    "                duracioninput.name = 'duracion' + i;" +
-                    //                    "                duracioninput.className = 'form-control';" +
-                    //                    "                duracioninput.value = '';" +
-                    //                    "                duracion.innerHTML += duracioninput.outerHTML;" +
+                    "                var tempMininput = '<input name=tempMin'+ i + ' class=form-control></input>'; " +
+                    "                tempMin.innerHTML += tempMininput;" +
+                                        "" +
+                    "                var duracioninput = '<input name=duracion'+ i + ' class=form-control></input>'; " +
+                    "                duracion.innerHTML += duracioninput;" +
                     "            }}" +
                     //                    "" +
                     "        }});" +
@@ -403,31 +388,25 @@ namespace TemperatureWarriorCode.Web {
 
                                                 "function save(){{" +
                                                 "console.log(\"Calling Save in JS!!\");" +
-                                                    "            var tempMax = [];" +
                                                     "            var length = (document.forms['params'].length)/3-1;" +
-                                                    "            console.log(length);" +
+                                                    "            var tempMax = [];" +
+                                                    "            var tempMin = [];" +
+                                                    "            var time = [];" +
                                                     "            for (var i = 0; i <= length-1; i++) {{" +
-                                                    "                if (document.getElementsByName('tempMax' + i).value != ''){{" +
-                                                    "                    tempMax.push(parseInt(document.getElementsByName('tempMax' + i)[0].value));" +
+                                                    "                if (document.forms['params']['tempMax'+i].value != ''){{" +
+                                                    "                    tempMax.push((document.forms['params']['tempMax'+i].value));" +
+                                                    "                }}" +
+                                                    "                if (document.forms['params']['tempMin'+i].value != ''){{" +
+                                                    "                    tempMin.push(document.forms['params']['tempMin'+i].value);" +
+                                                    "                }}" +
+                                                    "                if (document.forms['params']['duracion'+i].value != ''){{" +
+                                                    "                    time.push(document.forms['params']['duracion'+i].value);" +
                                                     "                }}" +
                                                     "            }}" +
-                                                //    "" +
-                                                //    "            var tempMin = [];" +
-                                                //    "            for (var i = 0; i <= length-1; i++) {" +
-                                                //    "                if (document.getElementsByName('tempMin' + i).value != '){" +
-                                                //    "                    tempMin.push(parseInt(document.getElementsByName('tempMin' + i)[0].value));" +
-                                                //    "                }" +
-                                                //    "            }" +
-                                                //    "" +
-                                                //    "            var time = [];" +
-                                                //    "            for (var i = 0; i <= length-1; i++) {" +
-                                                //    "                if (document.getElementsByName('duracion' + i).value != '){" +
-                                                //    "                    time.push(parseInt(document.getElementsByName('duracion' + i)[0].value));" +
-                                                //    "                }" +
-                                                //    "            }" +
-                                                //"var displayRefresh = document.forms['params']['displayRefresh'].value;" +
-                                                //"var pass = document.forms['params']['pass'].value;" +
-                                                //"location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh + '&refresh=' + refresh + '&time=' + time + '&pass=' + pass;" +
+
+                                                "var displayRefresh = document.forms['params']['displayRefresh'].value;" +
+                                                "var pass = document.forms['params']['pass'].value;" +
+                                                "location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh  + '&time=' + time + '&pass=' + pass;" +
                                                 "}} " +
                                                 "function temp(){{" +
                                                 "console.log(\"Calling temp in JS!!\");" +
