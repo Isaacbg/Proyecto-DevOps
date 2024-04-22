@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Meadow;
 using Meadow.Devices;
@@ -15,27 +16,26 @@ namespace TemperatureWarriorCode
          {
               this.relayPort = relayPort;
          }
-        
+
         // Function to turn on the relay
-        public async Task TurnOn()
+        public void TurnOn()
         {
-            relayPort.State = true;
-            Console.WriteLine("Relay On");
+            relayPort.State = true; // NO
+            //Console.WriteLine("Relay On");
         }
 
         // Function to turn off the relay
-        public async Task TurnOff()
+        public void TurnOff()
         {
-            relayPort.State = false;
-            Console.WriteLine("Relay Off");
+            relayPort.State = false; // NC
+            //Console.WriteLine("Relay Off");
         }
 
         // Function to ivert the polarity of the relay
-        public async Task Invert()
+        public void Invert()
         {
             relayPort.State = !relayPort.State;
-            Console.WriteLine("Relay Inverted");
+            //Console.WriteLine("Relay Inverted");
         }
     }
 }
-// Path: TemperatureWarriorCode/Rele.cs

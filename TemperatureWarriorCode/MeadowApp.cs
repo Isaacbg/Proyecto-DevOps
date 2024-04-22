@@ -97,8 +97,18 @@ namespace TemperatureWarriorCode {
                 DerivativeComponent = Kd
             };
 
+            // Initialize reles
+            Rele rele_switch = new Rele(Device.CreateDigitalOutputPort(Device.Pins.D02));
+            Rele rele1 = new Rele(Device.CreateDigitalOutputPort(Device.Pins.D03));
+            Rele rele2 = new Rele(Device.CreateDigitalOutputPort(Device.Pins.D04));
+
+            // Turn on the relay
+            rele_switch.TurnOn();
+
+            // Change polarity of the relay
+
             //Controller variables
-            bool is_on = false;
+
             bool is_heating = false;
             bool is_cooling = false;
 
@@ -122,7 +132,6 @@ namespace TemperatureWarriorCode {
 
             //define ranges
             for (int i = 0; i < Data.temp_min.Length; i++) {
-                Console.WriteLine(Data.temp_max[i]);
                 temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data.round_time[i]) * 1000);
                 total_time += int.Parse(Data.round_time[i]);
             }
@@ -153,29 +162,46 @@ namespace TemperatureWarriorCode {
                 float max_temp = float.Parse(Data.temp_max[Data.current_period]);
                 standardPidController.TargetInput = (min_temp + max_temp) / 2;
 
+                Console.WriteLine("Temp: "+ Data.temp_act.ToString());
                 // Get actual sensor temperature
                 standardPidController.ActualInput = float.Parse(Data.temp_act);
 
                 // Get output from PID controller
                 float output = standardPidController.CalculateControlOutput();
-
+                Console.WriteLine("PID: " + output.ToString());
                 //Get voltage to apply
-                if (output > 2) {
+                if (output > 0) {
+                    rele_switch.TurnOn();
+                    // Change polarity
+                    if (is_cooling) {
+                        rele_switch.TurnOff();
+                        // Sleep 10 ms
+                        Thread.Sleep(10);
+                        rele1.TurnOn();
+                        rele2.TurnOn();
+                        rele_switch.TurnOn();
+                    }
                     //Heating
-                    is_on = true;
                     is_heating = true;
                     is_cooling = false;
-                } else if (output < -2) {
+                } else if (output < 0) {
+                    rele_switch.TurnOn();
+                    if (is_heating) {
+                        rele_switch.TurnOff();
+                        // Sleep 10 ms
+                        Thread.Sleep(10);
+                        rele1.TurnOff();
+                        rele2.TurnOff();
+                        rele_switch.TurnOn();
+                    }
                     //Cooling
-                    is_on = true;
                     is_heating = false;
                     is_cooling = true;
-                // PONER RANGO DE OUTPUT EN EL QUE SE DEBE PARAR DE CALENTAR Y ENFRIAR
                 } else {
                     //Stop heating or cooling
-                    is_on = false;
                     is_heating = false;
                     is_cooling = false;
+                    rele_switch.TurnOff();
                 }
 
                 // Update controller with the new voltage
@@ -188,8 +214,9 @@ namespace TemperatureWarriorCode {
 
             }
             Console.WriteLine("Round Finish");
+            rele_switch.TurnOff();
             // Reset PID controller
-            standardPidController.ResetIntegrator();
+            //standardPidController.ResetIntegrator();
             t.Abort();
 
             total_time_in_range += timeController.TimeInRangeInMilliseconds;
@@ -220,7 +247,7 @@ namespace TemperatureWarriorCode {
 
            Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
 
-           Console.WriteLine($"Temperature={Data.temp_act}");
+           //Console.WriteLine($"Temperature={Data.temp_act}");
         }
 
         void WiFiAdapter_WiFiConnected(object sender, EventArgs e) {
