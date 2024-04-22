@@ -171,7 +171,7 @@ namespace TemperatureWarriorCode {
                 float output = standardPidController.CalculateControlOutput();
                 Console.WriteLine("PID: " + output.ToString());
                 //Get voltage to apply
-                if (output > 2) {
+                if (output > 0) {
                     rele_switch.TurnOn();
                     // Change polarity
                     if (is_cooling) {
@@ -186,7 +186,7 @@ namespace TemperatureWarriorCode {
                     is_on = true;
                     is_heating = true;
                     is_cooling = false;
-                } else if (output < -2) {
+                } else if (output < 0) {
                     rele_switch.TurnOn();
                     if (is_heating) {
                         rele_switch.TurnOff();
@@ -221,7 +221,7 @@ namespace TemperatureWarriorCode {
             Console.WriteLine("Round Finish");
             rele_switch.TurnOff();
             // Reset PID controller
-            standardPidController.ResetIntegrator();
+            //standardPidController.ResetIntegrator();
             t.Abort();
 
             total_time_in_range += timeController.TimeInRangeInMilliseconds;
