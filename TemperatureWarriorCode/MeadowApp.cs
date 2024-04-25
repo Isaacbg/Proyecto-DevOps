@@ -204,12 +204,29 @@ namespace TemperatureWarriorCode {
                     rele_switch.TurnOff();
                 }
 
-                // Update controller with the new voltage
+                Console.WriteLine($"Temperature each interval={Data.temp_act}");
+                
+                // Temperature registration algorithm
+                if (Data.interval_temps.Count > 0) {
+                    // If any value is within the min and max temp
+                    double matchingTemp = Data.interval_temps.Find(x => x >= min_temp && x <= max_temp);
+                    if (matchingTemp != 0) {
+                        timeController.RegisterTemperature(matchingTemp);
+                        Console.WriteLine($"Temp within range = {matchingTemp}");
+                    } else {
+                        // If no value is within the min and max temp get the mean value
+                        double mean = Data.interval_temps.Average();
+                        timeController.RegisterTemperature(mean);
+                        Console.WriteLine($"Mean temp value = {mean}");
+                    }
+                } else {
+                    Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
+                    timeController.RegisterTemperature(double.Parse(Data.temp_act));
+                }
+                // Clear interval temperatures
+                Data.interval_temps.Clear();
 
-
-                //Temperature registration
-                Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
-                timeController.RegisterTemperature(double.Parse(Data.temp_act));
+                // Restart timer
                 regTempTimer.Restart();
 
             }
@@ -245,9 +262,16 @@ namespace TemperatureWarriorCode {
         //Temperature and Display Updated
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e) {
 
-           Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
+           // New temperature
+           double temp = Math.Round((Double)e.New.Celsius, 2);
+           // Add temperature to the list
+           Data.interval_temps.Add(temp);
+           Console.WriteLine($"Temperatures: {Data.interval_temps}");
 
-           //Console.WriteLine($"Temperature={Data.temp_act}");
+           // Update actual temperature
+           Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
+        
+           Console.WriteLine($"Temperature each update: {Data.temp_act}");
         }
 
         void WiFiAdapter_WiFiConnected(object sender, EventArgs e) {

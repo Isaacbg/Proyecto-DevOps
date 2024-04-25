@@ -1,5 +1,6 @@
 ﻿using System;
 using Meadow.Foundation;
+using System.Collections.Generic;
 
 namespace TemperatureWarriorCode {
     class Data {
@@ -18,6 +19,7 @@ namespace TemperatureWarriorCode {
         //START ROUND VARIABLES
         public static bool is_working = false;
         public static string temp_act = "0"; // In ºC
+        public static List<double> interval_temps = new List<double>(); // List with all temperatures in one interval
         public static int time_left; // in s
         public static int time_in_range_temp = 0; //In ms.
         public static int current_period = 0; //Period of the round
