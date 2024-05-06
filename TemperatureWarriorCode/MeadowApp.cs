@@ -41,12 +41,13 @@ namespace TemperatureWarriorCode
         public static float Kd = 0.2f;
         public static int outputUpperLimit = 1;
         public static int outputLowerLimit = -1;
-<<<<<<< HEAD
-=======
 
+        //IDigitalOutputPort switchPort = Device.CreateDigitalOutputPort(Device.Pins.D02);
+        public static Frequency frequency = new Frequency(20, Frequency.UnitType.Hertz);
+        public static IPwmPort switchPort;
+        public static IDigitalOutputPort port1;
+        public static IDigitalOutputPort port2;
 
-
->>>>>>> 68a9758cea541a349ade937b8553d1aa73295dea
         public override async Task Run()
         {
             if (count == 0)
@@ -58,6 +59,10 @@ namespace TemperatureWarriorCode
                 sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
                 sensor.TemperatureUpdated += AnalogTemperatureUpdated;
                 sensor.StartUpdating(TimeSpan.FromSeconds(0.02));
+
+                switchPort = Device.CreatePwmPort(Device.Pins.D02, frequency, 0);
+                port1 = Device.CreateDigitalOutputPort(Device.Pins.D03);
+                port2 = Device.CreateDigitalOutputPort(Device.Pins.D04);
 
                 // TODO Local Network configuration (uncomment when needed)
                 var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
@@ -98,6 +103,7 @@ namespace TemperatureWarriorCode
         public static void StartRound()
         {
 
+            total_time = 0;
 
             // Initialize PID controller
             StandardPidController standardPidController = new StandardPidController
@@ -109,10 +115,7 @@ namespace TemperatureWarriorCode
                 DerivativeComponent = Kd
             };
 
-            //IDigitalOutputPort switchPort = Device.CreateDigitalOutputPort(Device.Pins.D02);
-            IPwmPort switchPort = Device.CreatePwmPort(Device.Pins.D02, new Frequency(20, Frequency.UnitType.Hertz), 0);
-            IDigitalOutputPort port1 = Device.CreateDigitalOutputPort(Device.Pins.D03);
-            IDigitalOutputPort port2 = Device.CreateDigitalOutputPort(Device.Pins.D04);
+            
 
 
 
@@ -161,6 +164,7 @@ namespace TemperatureWarriorCode
             //Initialization of timecontroller with the ranges
             timeController.DEBUG_MODE = false;
             success = timeController.Configure(temperatureRanges, total_time * 1000, Data.refresh, out error_message);
+            Console.WriteLine(error_message);
             Console.WriteLine(success);
 
             //Initialization of timer
@@ -197,20 +201,14 @@ namespace TemperatureWarriorCode
                 float output = standardPidController.CalculateControlOutput();
                 Console.WriteLine("PID: " + output.ToString());
                 //Get voltage to apply
-<<<<<<< HEAD
 
-=======
->>>>>>> 68a9758cea541a349ade937b8553d1aa73295dea
                 if (output > 0)
                 {
                     switchPort.DutyCycle = Math.Abs(output);
                     switchPort.Start();
                     //rele_switch.TurnOn();
                     // Change polarity
-<<<<<<< HEAD
 
-=======
->>>>>>> 68a9758cea541a349ade937b8553d1aa73295dea
                     if (is_cooling)
                     {
                         switchPort.Stop();
@@ -219,10 +217,7 @@ namespace TemperatureWarriorCode
                         Thread.Sleep(10);
                         rele1.TurnOn();
                         rele2.TurnOn();
-<<<<<<< HEAD
-=======
 
->>>>>>> 68a9758cea541a349ade937b8553d1aa73295dea
                         switchPort.DutyCycle = Math.Abs(output);
                         switchPort.Start();
                         //rele_switch.TurnOn();
@@ -230,10 +225,6 @@ namespace TemperatureWarriorCode
                     //Heating
                     is_heating = true;
                     is_cooling = false;
-<<<<<<< HEAD
-
-=======
->>>>>>> 68a9758cea541a349ade937b8553d1aa73295dea
                 }
                 else if (output < 0)
                 {
@@ -283,8 +274,8 @@ namespace TemperatureWarriorCode
             //standardPidController.ResetIntegrator();
             t.Abort();
 
-            total_time_in_range += timeController.TimeInRangeInMilliseconds;
-            total_time_out_of_range += timeController.TimeOutOfRangeInMilliseconds;
+            total_time_in_range = timeController.TimeInRangeInMilliseconds;
+            total_time_out_of_range = timeController.TimeOutOfRangeInMilliseconds;
             Data.time_in_range_temp = (timeController.TimeInRangeInMilliseconds / 1000);
 
             Console.WriteLine("Tiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
@@ -319,11 +310,7 @@ namespace TemperatureWarriorCode
         {
 
             Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
-<<<<<<< HEAD
-=======
 
-            //Console.WriteLine($"Temperatura de cada update={Data.temp_act}");
->>>>>>> 68a9758cea541a349ade937b8553d1aa73295dea
         }
 
         void WiFiAdapter_WiFiConnected(object sender, EventArgs e)
