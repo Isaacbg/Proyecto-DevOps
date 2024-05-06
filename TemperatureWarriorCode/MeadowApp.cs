@@ -20,8 +20,10 @@ using NETDuinoWar;
 using Meadow.Foundation.Controllers.Pid;
 
 
-namespace TemperatureWarriorCode {
-    public class MeadowApp : App<F7FeatherV2> {
+namespace TemperatureWarriorCode
+{
+    public class MeadowApp : App<F7FeatherV2>
+    {
 
         //Temperature Sensor
         AnalogTemperature sensor;
@@ -39,11 +41,10 @@ namespace TemperatureWarriorCode {
         public static float Kd = 0.2f;
         public static int outputUpperLimit = 1;
         public static int outputLowerLimit = -1;
-
-
-
-        public override async Task Run() {
-            if (count == 0) {
+        public override async Task Run()
+        {
+            if (count == 0)
+            {
                 Console.WriteLine("Initialization...");
 
                 // TODO uncomment when needed 
@@ -88,8 +89,9 @@ namespace TemperatureWarriorCode {
         }
 
         //TW Combat Round
-        public static void StartRound() {
-            
+        public static void StartRound()
+        {
+
 
             // Initialize PID controller
             StandardPidController standardPidController = new StandardPidController
@@ -144,11 +146,12 @@ namespace TemperatureWarriorCode {
             Data.is_working = true;
 
             //define ranges
-            for (int i = 0; i < Data.temp_min.Length; i++) {
+            for (int i = 0; i < Data.temp_min.Length; i++)
+            {
                 temperatureRanges[i] = new TemperatureRange(double.Parse(Data.temp_min[i]), double.Parse(Data.temp_max[i]), int.Parse(Data.round_time[i]) * 1000);
                 total_time += int.Parse(Data.round_time[i]);
             }
-            
+
             //Initialization of timecontroller with the ranges
             timeController.DEBUG_MODE = false;
             success = timeController.Configure(temperatureRanges, total_time * 1000, Data.refresh, out error_message);
@@ -165,7 +168,8 @@ namespace TemperatureWarriorCode {
             Console.WriteLine("STARTING");
 
             //THE TW START WORKING
-            while (Data.is_working) {
+            while (Data.is_working)
+            {
 
                 //This is the time refresh we did not do before
                 Thread.Sleep(Data.refresh - sleep_time);
@@ -181,23 +185,27 @@ namespace TemperatureWarriorCode {
                 standardPidController.ActualInput = float.Parse(Data.temp_act);
                 
 
+
                 // Get output from PID controller
                 float output = standardPidController.CalculateControlOutput();
                 Console.WriteLine("PID: " + output.ToString());
                 //Get voltage to apply
-                if (output > 0) {
+
+                if (output > 0)
+                {
                     switchPort.DutyCycle = Math.Abs(output);
                     switchPort.Start();
                     //rele_switch.TurnOn();
                     // Change polarity
-                    if (is_cooling) {
+
+                    if (is_cooling)
+                    {
                         switchPort.Stop();
                         //rele_switch.TurnOff();
                         // Sleep 10 ms
                         Thread.Sleep(10);
                         rele1.TurnOn();
                         rele2.TurnOn();
-                        
                         switchPort.DutyCycle = Math.Abs(output);
                         switchPort.Start();
                         //rele_switch.TurnOn();
@@ -205,11 +213,15 @@ namespace TemperatureWarriorCode {
                     //Heating
                     is_heating = true;
                     is_cooling = false;
-                } else if (output < 0) {
+
+                }
+                else if (output < 0)
+                {
                     switchPort.DutyCycle = Math.Abs(output);
                     switchPort.Start();
                     //rele_switch.TurnOn();
-                    if (is_heating) {
+                    if (is_heating)
+                    {
                         switchPort.Stop();
                         //rele_switch.TurnOff();
                         // Sleep 10 ms
@@ -224,7 +236,9 @@ namespace TemperatureWarriorCode {
                     //Cooling
                     is_heating = false;
                     is_cooling = true;
-                } else {
+                }
+                else
+                {
                     //Stop heating or cooling
                     is_heating = false;
                     is_cooling = false;
@@ -255,7 +269,7 @@ namespace TemperatureWarriorCode {
 
             Console.WriteLine("Tiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
             Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
-            
+
             timeController.FinishOperation();
             switchPort.Dispose();
             port1.Dispose();
@@ -263,13 +277,16 @@ namespace TemperatureWarriorCode {
         }
 
         //Round Timer
-        private static void Timer() {
+        private static void Timer()
+        {
             Data.is_working = true;
-            for (int i = 0; i < Data.round_time.Length; i++) {
+            for (int i = 0; i < Data.round_time.Length; i++)
+            {
                 Data.time_left = int.Parse(Data.round_time[i]);
                 Data.current_period = i;
 
-                while (Data.time_left > 0) {
+                while (Data.time_left > 0)
+                {
                     Data.time_left--;
                     Thread.Sleep(1000);
                 }
@@ -278,24 +295,27 @@ namespace TemperatureWarriorCode {
         }
 
         //Temperature and Display Updated
-        void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e) {
+        void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e)
+        {
 
-           Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
-
-           //Console.WriteLine($"Temperatura de cada update={Data.temp_act}");
+            Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
         }
 
-        void WiFiAdapter_WiFiConnected(object sender, EventArgs e) {
-            if (sender != null) {
+        void WiFiAdapter_WiFiConnected(object sender, EventArgs e)
+        {
+            if (sender != null)
+            {
                 Console.WriteLine($"Connecting to WiFi Network {Secrets.WIFI_NAME}");
             }
         }
 
-        void WiFiAdapter_ConnectionCompleted(object sender, EventArgs e) {
+        void WiFiAdapter_ConnectionCompleted(object sender, EventArgs e)
+        {
             Console.WriteLine("Connection request completed.");
         }
 
-        protected WifiNetwork ScanForAccessPoints(string SSID) {
+        protected WifiNetwork ScanForAccessPoints(string SSID)
+        {
             WifiNetwork wifiNetwork = null;
             ObservableCollection<WifiNetwork> networks = new ObservableCollection<WifiNetwork>(Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>().Scan()?.Result?.ToList()); //REVISAR SI ESTO ESTA BIEN
             wifiNetwork = networks?.FirstOrDefault(x => string.Compare(x.Ssid, SSID, true) == 0);
