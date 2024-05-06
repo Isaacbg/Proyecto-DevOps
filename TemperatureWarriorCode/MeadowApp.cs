@@ -41,6 +41,12 @@ namespace TemperatureWarriorCode
         public static float Kd = 0.2f;
         public static int outputUpperLimit = 1;
         public static int outputLowerLimit = -1;
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> 68a9758cea541a349ade937b8553d1aa73295dea
         public override async Task Run()
         {
             if (count == 0)
@@ -186,18 +192,25 @@ namespace TemperatureWarriorCode
                 
 
 
+
                 // Get output from PID controller
                 float output = standardPidController.CalculateControlOutput();
                 Console.WriteLine("PID: " + output.ToString());
                 //Get voltage to apply
+<<<<<<< HEAD
 
+=======
+>>>>>>> 68a9758cea541a349ade937b8553d1aa73295dea
                 if (output > 0)
                 {
                     switchPort.DutyCycle = Math.Abs(output);
                     switchPort.Start();
                     //rele_switch.TurnOn();
                     // Change polarity
+<<<<<<< HEAD
 
+=======
+>>>>>>> 68a9758cea541a349ade937b8553d1aa73295dea
                     if (is_cooling)
                     {
                         switchPort.Stop();
@@ -206,6 +219,10 @@ namespace TemperatureWarriorCode
                         Thread.Sleep(10);
                         rele1.TurnOn();
                         rele2.TurnOn();
+<<<<<<< HEAD
+=======
+
+>>>>>>> 68a9758cea541a349ade937b8553d1aa73295dea
                         switchPort.DutyCycle = Math.Abs(output);
                         switchPort.Start();
                         //rele_switch.TurnOn();
@@ -213,7 +230,10 @@ namespace TemperatureWarriorCode
                     //Heating
                     is_heating = true;
                     is_cooling = false;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 68a9758cea541a349ade937b8553d1aa73295dea
                 }
                 else if (output < 0)
                 {
@@ -299,6 +319,11 @@ namespace TemperatureWarriorCode
         {
 
             Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
+<<<<<<< HEAD
+=======
+
+            //Console.WriteLine($"Temperatura de cada update={Data.temp_act}");
+>>>>>>> 68a9758cea541a349ade937b8553d1aa73295dea
         }
 
         void WiFiAdapter_WiFiConnected(object sender, EventArgs e)
