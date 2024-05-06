@@ -34,11 +34,13 @@ namespace TemperatureWarriorCode {
         public int count = 0;
 
         //Initialize PID controller with appropriate gains and limits
-        public static float Kp = 0.1f;
-        public static float Ki = 0.1f;
-        public static float Kd = 0.05f;
-        public static int outputUpperLimit = 50;
-        public static int outputLowerLimit = -50;
+        public static float Kp = 0.4f;
+        public static float Ki = 0.5f;
+        public static float Kd = 0.2f;
+        public static int outputUpperLimit = 1;
+        public static int outputLowerLimit = -1;
+
+
 
         public override async Task Run() {
             if (count == 0) {
@@ -48,7 +50,7 @@ namespace TemperatureWarriorCode {
                 // Temperature Sensor Configuration
                 sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
                 sensor.TemperatureUpdated += AnalogTemperatureUpdated;
-                sensor.StartUpdating(TimeSpan.FromSeconds(2));
+                sensor.StartUpdating(TimeSpan.FromSeconds(0.02));
 
                 // TODO Local Network configuration (uncomment when needed)
                 var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
@@ -81,11 +83,13 @@ namespace TemperatureWarriorCode {
                 Console.WriteLine("Meadow Initialized!");
 
                 count = count + 1;
+
             }
         }
 
         //TW Combat Round
         public static void StartRound() {
+            
 
             // Initialize PID controller
             StandardPidController standardPidController = new StandardPidController
@@ -97,13 +101,22 @@ namespace TemperatureWarriorCode {
                 DerivativeComponent = Kd
             };
 
+            //IDigitalOutputPort switchPort = Device.CreateDigitalOutputPort(Device.Pins.D02);
+            IPwmPort switchPort = Device.CreatePwmPort(Device.Pins.D02, new Frequency(20, Frequency.UnitType.Hertz), 0);
+            IDigitalOutputPort port1 = Device.CreateDigitalOutputPort(Device.Pins.D03);
+            IDigitalOutputPort port2 = Device.CreateDigitalOutputPort(Device.Pins.D04);
+
+
+
             // Initialize reles
-            Rele rele_switch = new Rele(Device.CreateDigitalOutputPort(Device.Pins.D02));
-            Rele rele1 = new Rele(Device.CreateDigitalOutputPort(Device.Pins.D03));
-            Rele rele2 = new Rele(Device.CreateDigitalOutputPort(Device.Pins.D04));
+            //Rele rele_switch = new Rele(switchPort);
+            Rele rele1 = new Rele(port1);
+            Rele rele2 = new Rele(port2);
 
             // Turn on the relay
-            rele_switch.TurnOn();
+            switchPort.DutyCycle = 1;
+            switchPort.Start();
+            //rele_switch.TurnOn();
 
             // Change polarity of the relay
 
@@ -161,38 +174,52 @@ namespace TemperatureWarriorCode {
                 float min_temp = float.Parse(Data.temp_min[Data.current_period]);
                 float max_temp = float.Parse(Data.temp_max[Data.current_period]);
                 standardPidController.TargetInput = (min_temp + max_temp) / 2;
-
-                Console.WriteLine("Temp: "+ Data.temp_act.ToString());
+                Console.WriteLine("Target: " + standardPidController.TargetInput.ToString());
+                //Console.WriteLine("Temp: "+ Data.temp_act.ToString());
                 // Get actual sensor temperature
+                Console.WriteLine("Temp: " + Data.temp_act.ToString());
                 standardPidController.ActualInput = float.Parse(Data.temp_act);
+                
 
                 // Get output from PID controller
                 float output = standardPidController.CalculateControlOutput();
                 Console.WriteLine("PID: " + output.ToString());
                 //Get voltage to apply
                 if (output > 0) {
-                    rele_switch.TurnOn();
+                    switchPort.DutyCycle = Math.Abs(output);
+                    switchPort.Start();
+                    //rele_switch.TurnOn();
                     // Change polarity
                     if (is_cooling) {
-                        rele_switch.TurnOff();
+                        switchPort.Stop();
+                        //rele_switch.TurnOff();
                         // Sleep 10 ms
                         Thread.Sleep(10);
                         rele1.TurnOn();
                         rele2.TurnOn();
-                        rele_switch.TurnOn();
+                        
+                        switchPort.DutyCycle = Math.Abs(output);
+                        switchPort.Start();
+                        //rele_switch.TurnOn();
                     }
                     //Heating
                     is_heating = true;
                     is_cooling = false;
                 } else if (output < 0) {
-                    rele_switch.TurnOn();
+                    switchPort.DutyCycle = Math.Abs(output);
+                    switchPort.Start();
+                    //rele_switch.TurnOn();
                     if (is_heating) {
-                        rele_switch.TurnOff();
+                        switchPort.Stop();
+                        //rele_switch.TurnOff();
                         // Sleep 10 ms
                         Thread.Sleep(10);
                         rele1.TurnOff();
                         rele2.TurnOff();
-                        rele_switch.TurnOn();
+
+                        switchPort.DutyCycle = Math.Abs(output);
+                        switchPort.Start();
+                        //rele_switch.TurnOn();
                     }
                     //Cooling
                     is_heating = false;
@@ -201,11 +228,13 @@ namespace TemperatureWarriorCode {
                     //Stop heating or cooling
                     is_heating = false;
                     is_cooling = false;
-                    rele_switch.TurnOff();
+                    switchPort.Stop();
+                    //rele_switch.TurnOff();
                 }
 
                 // Update controller with the new voltage
 
+                //Console.WriteLine($"Temperatura en cada intervalo={Data.temp_act}");
 
                 //Temperature registration
                 Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
@@ -214,7 +243,8 @@ namespace TemperatureWarriorCode {
 
             }
             Console.WriteLine("Round Finish");
-            rele_switch.TurnOff();
+            switchPort.Stop();
+            //rele_switch.TurnOff();
             // Reset PID controller
             //standardPidController.ResetIntegrator();
             t.Abort();
@@ -225,6 +255,11 @@ namespace TemperatureWarriorCode {
 
             Console.WriteLine("Tiempo dentro del rango " + (((double)timeController.TimeInRangeInMilliseconds / 1000)) + " s de " + total_time + " s");
             Console.WriteLine("Tiempo fuera del rango " + ((double)total_time_out_of_range / 1000) + " s de " + total_time + " s");
+            
+            timeController.FinishOperation();
+            switchPort.Dispose();
+            port1.Dispose();
+            port2.Dispose();
         }
 
         //Round Timer
@@ -247,7 +282,7 @@ namespace TemperatureWarriorCode {
 
            Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
 
-           //Console.WriteLine($"Temperature={Data.temp_act}");
+           //Console.WriteLine($"Temperatura de cada update={Data.temp_act}");
         }
 
         void WiFiAdapter_WiFiConnected(object sender, EventArgs e) {
