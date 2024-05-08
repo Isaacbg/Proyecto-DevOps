@@ -54,15 +54,15 @@ namespace TemperatureWarriorCode
             {
                 Console.WriteLine("Initialization...");
 
+                switchPort = Device.CreatePwmPort(Device.Pins.D02, frequency, 0);
+                port1 = Device.CreateDigitalOutputPort(Device.Pins.D03);
+                port2 = Device.CreateDigitalOutputPort(Device.Pins.D04);
+
                 // TODO uncomment when needed 
                 // Temperature Sensor Configuration
                 sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
                 sensor.TemperatureUpdated += AnalogTemperatureUpdated;
                 sensor.StartUpdating(TimeSpan.FromSeconds(0.02));
-
-                switchPort = Device.CreatePwmPort(Device.Pins.D02, frequency, 0);
-                port1 = Device.CreateDigitalOutputPort(Device.Pins.D03);
-                port2 = Device.CreateDigitalOutputPort(Device.Pins.D04);
 
                 // TODO Local Network configuration (uncomment when needed)
                 var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
@@ -114,9 +114,6 @@ namespace TemperatureWarriorCode
                 IntegralComponent = Ki,
                 DerivativeComponent = Kd
             };
-
-            
-
 
 
             // Initialize reles
@@ -195,8 +192,6 @@ namespace TemperatureWarriorCode
                 standardPidController.ActualInput = float.Parse(Data.temp_act);
                 
 
-
-
                 // Get output from PID controller
                 float output = standardPidController.CalculateControlOutput();
                 Console.WriteLine("PID: " + output.ToString());
@@ -257,7 +252,27 @@ namespace TemperatureWarriorCode
                     //rele_switch.TurnOff();
                 }
 
-                // Update controller with the new voltage
+                Console.WriteLine($"Temperature each interval={Data.temp_act}");
+
+                // Temperature registration algorithm
+                if (Data.interval_temps.Count > 0) {
+                    // If any value is within the min and max temp
+                    double matchingTemp = Data.interval_temps.Find(x => x >= min_temp && x <= max_temp);
+                    if (matchingTemp != 0) {
+                        timeController.RegisterTemperature(matchingTemp);
+                        Console.WriteLine($"Temp within range = {matchingTemp}");
+                    } else {
+                        // If no value is within the min and max temp get the mean value
+                        double mean = Data.interval_temps.Average();
+                        timeController.RegisterTemperature(mean);
+                        Console.WriteLine($"Mean temp value = {mean}");
+                    }
+                } else {
+                    Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
+                    timeController.RegisterTemperature(double.Parse(Data.temp_act));
+                }
+                // Clear interval temperatures
+                Data.interval_temps.Clear();
 
                 //Console.WriteLine($"Temperatura en cada intervalo={Data.temp_act}");
 
@@ -308,9 +323,27 @@ namespace TemperatureWarriorCode
         //Temperature and Display Updated
         void AnalogTemperatureUpdated(object sender, IChangeResult<Meadow.Units.Temperature> e)
         {
+            // New temperature
+            double temp = Math.Round((Double)e.New.Celsius, 2);
+            // Add temperature to the list
+            Data.interval_temps.Add(temp);
+            Console.WriteLine($"Temperatures: {Data.interval_temps}");
 
+            // Update actual temperature
             Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
 
+            Console.WriteLine($"Temperature each update: {Data.temp_act}");
+
+            if (double.Parse(Data.temp_act) > 55) {
+                // End the round
+                Data.is_working = false;
+                // Stop the relay
+                switchPort.DutyCycle = 0;
+                switchPort.Stop();
+                // End the program
+                Console.WriteLine("Temperature too high, ending round");
+                Environment.Exit(0);
+            }
         }
 
         void WiFiAdapter_WiFiConnected(object sender, EventArgs e)
