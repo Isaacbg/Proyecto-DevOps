@@ -149,14 +149,38 @@ namespace TemperatureWarriorCode.Web {
                                         //Data.round_time = new string[] { "5", "15" };
                                         Data.round_time = round_time_parts[1].Split(",");
 
+                                        var error = false;
+
                                         if (!tempCheck(Data.temp_max, false) || !tempCheck(Data.temp_min, true)) {
                                             message = "El rango de temperatura m&aacute;ximo es entre 30 y 12 grados C.";
+                                            error = true;
+                                        }
+                                        else
+                                        {
+                                            for (int i = 0; i < Data.temp_min.Length; i++)
+                                            {
+                                                if (int.Parse(Data.temp_min[i]) > int.Parse(Data.temp_max[i]))
+                                                {
+                                                    message = "La temperatura mínima debe ser menor que la temperatura máxima";
+                                                    error = true;
+                                                    break;
+                                                }
+
+
+                                            }
+                                            if (!error)
+                                                {
+                                                    message = "Los par&aacute;metros se han cambiado satisfactoriamente. Todo preparado.";
+                                                    ready = true;
+                                                }
                                         }
 
-                                        else {
-                                            message = "Los par&aacute;metros se han cambiado satisfactoriamente. Todo preparado.";
-                                            ready = true;
+                                        if (error)
+                                        {
+                                            ready = false;
                                         }
+
+                                        
                                     }
                                     else {
                                         message = "La contrase&ntilde;a es incorrecta.";
@@ -227,6 +251,7 @@ namespace TemperatureWarriorCode.Web {
                             return false;
                         }
                     }
+                    
                 }
                 return true;
             }
@@ -387,26 +412,42 @@ namespace TemperatureWarriorCode.Web {
 
 
                                                 "function save(){{" +
+                                                "let regex = /^[0-9]*$/;"+
                                                 "console.log(\"Calling Save in JS!!\");" +
                                                     "            var length = (document.forms['params'].length)/3-1;" +
                                                     "            var tempMax = [];" +
                                                     "            var tempMin = [];" +
                                                     "            var time = [];" +
                                                     "            for (var i = 0; i <= length-1; i++) {{" +
-                                                    "                if (document.forms['params']['tempMax'+i].value != ''){{" +
+                                                    "                if (document.forms['params']['tempMax'+i].value != '' && regex.test(document.forms['params']['tempMax'+i].value)){{" +
                                                     "                    tempMax.push((document.forms['params']['tempMax'+i].value));" +
-                                                    "                }}" +
-                                                    "                if (document.forms['params']['tempMin'+i].value != ''){{" +
+                                                    "                }}else{{" +
+                                                    "console.log('Error en la temperatura máxima');return;"+
+                                                    "}}" +
+                                                    "                if (document.forms['params']['tempMin'+i].value != '' && regex.test(document.forms['params']['tempMin'+i].value)){{" +
                                                     "                    tempMin.push(document.forms['params']['tempMin'+i].value);" +
-                                                    "                }}" +
-                                                    "                if (document.forms['params']['duracion'+i].value != ''){{" +
+"                                                   }}else{{" +
+                                                    "console.log('Error en la temperatura mínima'); return;" +
+                                                    "}}" +
+                                                    "                if (document.forms['params']['duracion'+i].value != '' && regex.test(document.forms['params']['duracion'+i].value)){{" +
                                                     "                    time.push(document.forms['params']['duracion'+i].value);" +
+"                                                   }}else{{" +
+                                                    "console.log('Error en la duración de la ronda');return;" +
+                                                    "}}" +
                                                     "                }}" +
-                                                    "            }}" +
-
+                                                    "if (document.forms['params']['displayRefresh'].value != '' && regex.test(document.forms['params']['displayRefresh'+i].value)){{" +
                                                 "var displayRefresh = document.forms['params']['displayRefresh'].value;" +
-                                                "var pass = document.forms['params']['pass'].value;" +
-                                                "location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh  + '&time=' + time + '&pass=' + pass;" +
+                                                "}} else {{"+
+                                                "console.log('Error en la cadencia de refresco');return;" +
+
+                                                "}}" +
+                                                     "if (document.forms['params']['pass'].value != ''){{" +
+                                               "var pass = document.forms['params']['pass'].value;" +
+                                               "}} else {{" +
+                                                "console.log('Error en la contraseña');return;" +
+
+                                                "}}" +
+                                                "location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh  + '&time=' + time + '&pass=' + pass;return;" +
                                                 "}} " +
                                                 "function temp(){{" +
                                                 "console.log(\"Calling temp in JS!!\");" +

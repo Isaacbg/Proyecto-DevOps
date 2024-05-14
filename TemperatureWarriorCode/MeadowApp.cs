@@ -185,8 +185,6 @@ namespace TemperatureWarriorCode
                 float min_temp = float.Parse(Data.temp_min[Data.current_period]);
                 float max_temp = float.Parse(Data.temp_max[Data.current_period]);
                 standardPidController.TargetInput = (min_temp + max_temp) / 2;
-                Console.WriteLine("Target: " + standardPidController.TargetInput.ToString());
-                //Console.WriteLine("Temp: "+ Data.temp_act.ToString());
                 // Get actual sensor temperature
                 Console.WriteLine("Temp: " + Data.temp_act.ToString());
                 standardPidController.ActualInput = float.Parse(Data.temp_act);
@@ -327,12 +325,8 @@ namespace TemperatureWarriorCode
             double temp = Math.Round((Double)e.New.Celsius, 2);
             // Add temperature to the list
             Data.interval_temps.Add(temp);
-            Console.WriteLine($"Temperatures: {Data.interval_temps}");
-
             // Update actual temperature
             Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
-
-            Console.WriteLine($"Temperature each update: {Data.temp_act}");
 
             if (double.Parse(Data.temp_act) > 55) {
                 // End the round
