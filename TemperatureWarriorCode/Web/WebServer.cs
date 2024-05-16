@@ -19,6 +19,7 @@ namespace TemperatureWarriorCode.Web {
         private static bool ready = false;
         private static readonly string pass = "pass";
         private static string message = "";
+        private static bool stop = false;
 
 
         /// <summary>
@@ -103,6 +104,12 @@ namespace TemperatureWarriorCode.Web {
                         _runServer = false;
                     }
 
+                    if (req.Url.AbsolutePath == "/stop")
+                    {
+                        Data.is_working = false;
+                        stop = true;
+                    }
+
                     if (req.Url.AbsolutePath == "/setparams") {
 
                         //Get parameters
@@ -138,7 +145,7 @@ namespace TemperatureWarriorCode.Web {
 
                                         // Param 2 => to display_refresh
                                         string[] display_refresh_parts = parameters[2].Split('=');
-                                        Data.display_refresh = Int16.Parse(display_refresh_parts[1]);
+                                        Data.refresh = Int16.Parse(display_refresh_parts[1]);
                                         //Data.display_refresh = 1000;
                                        
 
@@ -267,8 +274,8 @@ namespace TemperatureWarriorCode.Web {
 
             // Only show save and cooler mode in configuration mode and start round when we are ready
             string save = "<button type=\"button\" onclick='save()'>Guardar</button>";
+            string button = "<button type=\"button\" onclick='stop()'>Parar ejecución</button>";
             string temp = "<a href='#' class='btn btn-primary tm-btn-search' onclick='temp()'>Consultar Temperatura</a>";
-            string graph = "";
             if (ready) {
                 save = "";
             }
@@ -278,6 +285,10 @@ namespace TemperatureWarriorCode.Web {
             }
             if (Data.is_working) {
                 start = "";
+           }
+            if (stop)
+            {
+                button = "<button type=\"button\" onclick='back()'>Volver a la ronda</button>";
             }
             /*if (Data.csv_counter != 0) {
                 graph = "<canvas id='myChart' width='0' height='0'></canvas>";
@@ -381,7 +392,7 @@ namespace TemperatureWarriorCode.Web {
                         "</div>" +
 
                         "<div class='container ie-h-align-center-fix'>" +
-                        graph +
+                        button +
                         "</div>" +
 
                         
@@ -435,7 +446,7 @@ namespace TemperatureWarriorCode.Web {
                                                     "console.log('Error en la duración de la ronda');return;" +
                                                     "}}" +
                                                     "                }}" +
-                                                    "if (document.forms['params']['displayRefresh'].value != '' && regex.test(document.forms['params']['displayRefresh'+i].value)){{" +
+                                                    "if (document.forms['params']['displayRefresh'].value != '' && regex.test(document.forms['params']['displayRefresh'].value)){{" +
                                                 "var displayRefresh = document.forms['params']['displayRefresh'].value;" +
                                                 "}} else {{"+
                                                 "console.log('Error en la cadencia de refresco');return;" +
@@ -454,6 +465,8 @@ namespace TemperatureWarriorCode.Web {
                                                 "location.href = 'temp'" +
                                                 "}} " +
                                                 "function start(){{location.href = 'start'}}" +
+                                                "function stop(){{location.href= 'stop'}}"+
+                                                "function back(){{location.href= ''}}"+
                         "</script>" +
 "</body>" +
 "</html>";

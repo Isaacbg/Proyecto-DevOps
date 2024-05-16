@@ -39,8 +39,8 @@ namespace TemperatureWarriorCode
         public static float Kp = 0.4f;
         public static float Ki = 0.5f;
         public static float Kd = 0.2f;
-        public static int outputUpperLimit = 1;
-        public static int outputLowerLimit = -1;
+        public static int outputUpperLimit = 50;
+        public static int outputLowerLimit = -50;
 
         //IDigitalOutputPort switchPort = Device.CreateDigitalOutputPort(Device.Pins.D02);
         public static Frequency frequency = new Frequency(20, Frequency.UnitType.Hertz);
@@ -130,9 +130,6 @@ namespace TemperatureWarriorCode
 
             //Controller variables
 
-            bool is_heating = false;
-            bool is_cooling = false;
-
             Stopwatch timer = Stopwatch.StartNew();
             timer.Start();
 
@@ -181,11 +178,13 @@ namespace TemperatureWarriorCode
                 //This is the time refresh we did not do before
                 Thread.Sleep(Data.refresh - sleep_time);
 
+
                 // Get current target temperature (Getting min and max temp and getting mean value)
                 float min_temp = float.Parse(Data.temp_min[Data.current_period]);
                 float max_temp = float.Parse(Data.temp_max[Data.current_period]);
                 standardPidController.TargetInput = (min_temp + max_temp) / 2;
                 // Get actual sensor temperature
+                Console.WriteLine("Target: " + standardPidController.TargetInput);
                 Console.WriteLine("Temp: " + Data.temp_act.ToString());
                 standardPidController.ActualInput = float.Parse(Data.temp_act);
                 
@@ -195,57 +194,47 @@ namespace TemperatureWarriorCode
                 Console.WriteLine("PID: " + output.ToString());
                 //Get voltage to apply
 
-                if (output > 0)
+                if (output < 0)
                 {
-                    switchPort.DutyCycle = Math.Abs(output);
+                    Console.WriteLine("Enfriando");
+                    switchPort.DutyCycle = Math.Abs(output)/50;
                     switchPort.Start();
                     //rele_switch.TurnOn();
                     // Change polarity
 
-                    if (is_cooling)
-                    {
-                        switchPort.Stop();
-                        //rele_switch.TurnOff();
-                        // Sleep 10 ms
-                        Thread.Sleep(10);
-                        rele1.TurnOn();
-                        rele2.TurnOn();
+                    
+                    Thread.Sleep(10);
+                    rele1.TurnOn();
+                    rele2.TurnOn();
 
-                        switchPort.DutyCycle = Math.Abs(output);
-                        switchPort.Start();
-                        //rele_switch.TurnOn();
-                    }
-                    //Heating
-                    is_heating = true;
-                    is_cooling = false;
-                }
-                else if (output < 0)
-                {
-                    switchPort.DutyCycle = Math.Abs(output);
+                    switchPort.DutyCycle = Math.Abs(output)/50;
                     switchPort.Start();
                     //rele_switch.TurnOn();
-                    if (is_heating)
-                    {
-                        switchPort.Stop();
-                        //rele_switch.TurnOff();
-                        // Sleep 10 ms
-                        Thread.Sleep(10);
-                        rele1.TurnOff();
-                        rele2.TurnOff();
+                    
+                }
+                else if (output > 0)
+                {
+                    Console.WriteLine("Calentando");
 
-                        switchPort.DutyCycle = Math.Abs(output);
-                        switchPort.Start();
-                        //rele_switch.TurnOn();
-                    }
-                    //Cooling
-                    is_heating = false;
-                    is_cooling = true;
+                    switchPort.DutyCycle = Math.Abs(output)/50;
+                    switchPort.Start();
+                    //rele_switch.TurnOn();
+                    
+                    //switchPort.Stop();
+                    //rele_switch.TurnOff();
+                    // Sleep 10 ms
+                    Thread.Sleep(10);
+                    rele1.TurnOff();
+                    rele2.TurnOff();
+
+                    switchPort.DutyCycle = Math.Abs(output) / 50;
+                    switchPort.Start();
+                    //rele_switch.TurnOn();
+                    
                 }
                 else
                 {
                     //Stop heating or cooling
-                    is_heating = false;
-                    is_cooling = false;
                     switchPort.Stop();
                     //rele_switch.TurnOff();
                 }
@@ -272,11 +261,7 @@ namespace TemperatureWarriorCode
                 // Clear interval temperatures
                 Data.interval_temps.Clear();
 
-                //Console.WriteLine($"Temperatura en cada intervalo={Data.temp_act}");
-
-                //Temperature registration
-                Console.WriteLine($"RegTempTimer={regTempTimer.Elapsed.ToString()}, enviando Temp={Data.temp_act}");
-                timeController.RegisterTemperature(double.Parse(Data.temp_act));
+                
                 regTempTimer.Restart();
 
             }
@@ -327,7 +312,6 @@ namespace TemperatureWarriorCode
             Data.interval_temps.Add(temp);
             // Update actual temperature
             Data.temp_act = Math.Round((Double)e.New.Celsius, 2).ToString();
-
             if (double.Parse(Data.temp_act) > 55) {
                 // End the round
                 Data.is_working = false;
