@@ -36,11 +36,11 @@ namespace TemperatureWarriorCode
         public int count = 0;
 
         //Initialize PID controller with appropriate gains and limits
-        public static float Kp = 0.4f;
-        public static float Ki = 0.5f;
-        public static float Kd = 0.2f;
-        public static int outputUpperLimit = 50;
-        public static int outputLowerLimit = -50;
+        public static float Kp = 0.1f;
+        public static float Ki = 0.1f;
+        public static float Kd = 0.05f;
+        public static int outputUpperLimit = -50;
+        public static int outputLowerLimit = 50;
 
         //IDigitalOutputPort switchPort = Device.CreateDigitalOutputPort(Device.Pins.D02);
         public static Frequency frequency = new Frequency(20, Frequency.UnitType.Hertz);
@@ -62,7 +62,7 @@ namespace TemperatureWarriorCode
                 // Temperature Sensor Configuration
                 sensor = new AnalogTemperature(analogPin: Device.Pins.A01, sensorType: AnalogTemperature.KnownSensorType.TMP36);
                 sensor.TemperatureUpdated += AnalogTemperatureUpdated;
-                sensor.StartUpdating(TimeSpan.FromSeconds(0.02));
+                sensor.StartUpdating(TimeSpan.FromSeconds(0.1));
 
                 // TODO Local Network configuration (uncomment when needed)
                 var wifi = Device.NetworkAdapters.Primary<IWiFiNetworkAdapter>();
@@ -171,6 +171,11 @@ namespace TemperatureWarriorCode
 
             Console.WriteLine("STARTING");
 
+            var currentperiod = Data.current_period;
+            float min_temp = float.Parse(Data.temp_min[Data.current_period]);
+            float max_temp = float.Parse(Data.temp_max[Data.current_period]);
+            standardPidController.TargetInput = (min_temp + max_temp) / 2;
+            float output = 0;
             //THE TW START WORKING
             while (Data.is_working)
             {
@@ -178,11 +183,16 @@ namespace TemperatureWarriorCode
                 //This is the time refresh we did not do before
                 Thread.Sleep(Data.refresh - sleep_time);
 
-
-                // Get current target temperature (Getting min and max temp and getting mean value)
-                float min_temp = float.Parse(Data.temp_min[Data.current_period]);
-                float max_temp = float.Parse(Data.temp_max[Data.current_period]);
-                standardPidController.TargetInput = (min_temp + max_temp) / 2;
+                if (currentperiod != Data.current_period)
+                {
+                    // Get current target temperature (Getting min and max temp and getting mean value)
+                    standardPidController.ResetIntegrator();
+                    min_temp = float.Parse(Data.temp_min[Data.current_period]);
+                    max_temp = float.Parse(Data.temp_max[Data.current_period]);
+                    standardPidController.TargetInput = (min_temp + max_temp) / 2;
+                    Console.WriteLine("Updating for period: " + Data.current_period);
+                }
+                
                 // Get actual sensor temperature
                 Console.WriteLine("Target: " + standardPidController.TargetInput);
                 Console.WriteLine("Temp: " + Data.temp_act.ToString());
@@ -190,12 +200,12 @@ namespace TemperatureWarriorCode
                 
 
                 // Get output from PID controller
-                float output = standardPidController.CalculateControlOutput();
+                output = standardPidController.CalculateControlOutput();
                 Console.WriteLine("PID: " + output.ToString());
                 //Get voltage to apply
 
-                if (output < 0)
-                {
+                if (output < 0 || (output == 50 && float.Parse(Data.temp_act) > max_temp ))
+                { 
                     Console.WriteLine("Enfriando");
                     switchPort.DutyCycle = Math.Abs(output)/50;
                     switchPort.Start();
@@ -207,12 +217,12 @@ namespace TemperatureWarriorCode
                     rele1.TurnOn();
                     rele2.TurnOn();
 
-                    switchPort.DutyCycle = Math.Abs(output)/50;
-                    switchPort.Start();
+                    //switchPort.DutyCycle = Math.Abs(output)/50;
+                    //switchPort.Start();
                     //rele_switch.TurnOn();
                     
                 }
-                else if (output > 0)
+                else if (output > 0 || (output == -50 && float.Parse(Data.temp_act) < min_temp))
                 {
                     Console.WriteLine("Calentando");
 
@@ -227,8 +237,8 @@ namespace TemperatureWarriorCode
                     rele1.TurnOff();
                     rele2.TurnOff();
 
-                    switchPort.DutyCycle = Math.Abs(output) / 50;
-                    switchPort.Start();
+                    //switchPort.DutyCycle = Math.Abs(output) / 50;
+                    //switchPort.Start();
                     //rele_switch.TurnOn();
                     
                 }
@@ -263,6 +273,7 @@ namespace TemperatureWarriorCode
 
                 
                 regTempTimer.Restart();
+                currentperiod = Data.current_period;
 
             }
             Console.WriteLine("Round Finish");
