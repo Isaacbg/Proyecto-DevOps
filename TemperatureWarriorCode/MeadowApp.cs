@@ -36,11 +36,11 @@ namespace TemperatureWarriorCode
         public int count = 0;
 
         //Initialize PID controller with appropriate gains and limits
-        public static float Kp = 0.1f;
-        public static float Ki = 0.1f;
-        public static float Kd = 0.05f;
-        public static int outputUpperLimit = -50;
-        public static int outputLowerLimit = 50;
+        public static float Kp = 1f;
+        public static float Ki = 0.5f;
+        public static float Kd = 0.2f;
+        public static int outputUpperLimit = 50;
+        public static int outputLowerLimit = -50;
 
         //IDigitalOutputPort switchPort = Device.CreateDigitalOutputPort(Device.Pins.D02);
         public static Frequency frequency = new Frequency(20, Frequency.UnitType.Hertz);
@@ -112,7 +112,9 @@ namespace TemperatureWarriorCode
                 OutputMin = outputLowerLimit,
                 ProportionalComponent = Kp,
                 IntegralComponent = Ki,
-                DerivativeComponent = Kd
+                DerivativeComponent = Kd,
+                OutputTuningInformation = true,
+
             };
 
 
@@ -204,10 +206,10 @@ namespace TemperatureWarriorCode
                 Console.WriteLine("PID: " + output.ToString());
                 //Get voltage to apply
 
-                if (output < 0 || (output == 50 && float.Parse(Data.temp_act) > max_temp ))
+                if (output < 0 || (output == 50 && float.Parse(Data.temp_act) > max_temp && Data.refresh < 1500))
                 { 
                     Console.WriteLine("Enfriando");
-                    switchPort.DutyCycle = Math.Abs(output)/50;
+                    switchPort.DutyCycle = 1;
                     switchPort.Start();
                     //rele_switch.TurnOn();
                     // Change polarity
@@ -222,11 +224,11 @@ namespace TemperatureWarriorCode
                     //rele_switch.TurnOn();
                     
                 }
-                else if (output > 0 || (output == -50 && float.Parse(Data.temp_act) < min_temp))
+                else if (output > 0 || (output == -50 && float.Parse(Data.temp_act) < min_temp && Data.refresh < 1500))
                 {
                     Console.WriteLine("Calentando");
 
-                    switchPort.DutyCycle = Math.Abs(output)/50;
+                    switchPort.DutyCycle = Math.Abs(output)/100;
                     switchPort.Start();
                     //rele_switch.TurnOn();
                     
@@ -278,6 +280,8 @@ namespace TemperatureWarriorCode
             }
             Console.WriteLine("Round Finish");
             switchPort.Stop();
+            rele1.TurnOn();
+            rele2.TurnOn();
             //rele_switch.TurnOff();
             // Reset PID controller
             //standardPidController.ResetIntegrator();
