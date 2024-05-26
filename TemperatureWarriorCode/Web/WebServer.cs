@@ -19,6 +19,7 @@ namespace TemperatureWarriorCode.Web {
         private static bool ready = false;
         private static readonly string pass = "pass";
         private static string message = "";
+        private static bool stop = false;
 
 
         /// <summary>
@@ -103,6 +104,12 @@ namespace TemperatureWarriorCode.Web {
                         _runServer = false;
                     }
 
+                    if (req.Url.AbsolutePath == "/stop")
+                    {
+                        Data.is_working = false;
+                        stop = true;
+                    }
+
                     if (req.Url.AbsolutePath == "/setparams") {
 
                         //Get parameters
@@ -138,7 +145,7 @@ namespace TemperatureWarriorCode.Web {
 
                                         // Param 2 => to display_refresh
                                         string[] display_refresh_parts = parameters[2].Split('=');
-                                        Data.display_refresh = Int16.Parse(display_refresh_parts[1]);
+                                        Data.refresh = Int16.Parse(display_refresh_parts[1]);
                                         //Data.display_refresh = 1000;
                                        
 
@@ -149,14 +156,38 @@ namespace TemperatureWarriorCode.Web {
                                         //Data.round_time = new string[] { "5", "15" };
                                         Data.round_time = round_time_parts[1].Split(",");
 
+                                        var error = false;
+
                                         if (!tempCheck(Data.temp_max, false) || !tempCheck(Data.temp_min, true)) {
                                             message = "El rango de temperatura m&aacute;ximo es entre 30 y 12 grados C.";
+                                            error = true;
+                                        }
+                                        else
+                                        {
+                                            for (int i = 0; i < Data.temp_min.Length; i++)
+                                            {
+                                                if (int.Parse(Data.temp_min[i]) > int.Parse(Data.temp_max[i]))
+                                                {
+                                                    message = "La temperatura mínima debe ser menor que la temperatura máxima";
+                                                    error = true;
+                                                    break;
+                                                }
+
+
+                                            }
+                                            if (!error)
+                                                {
+                                                    message = "Los par&aacute;metros se han cambiado satisfactoriamente. Todo preparado.";
+                                                    ready = true;
+                                                }
                                         }
 
-                                        else {
-                                            message = "Los par&aacute;metros se han cambiado satisfactoriamente. Todo preparado.";
-                                            ready = true;
+                                        if (error)
+                                        {
+                                            ready = false;
                                         }
+
+                                        
                                     }
                                     else {
                                         message = "La contrase&ntilde;a es incorrecta.";
@@ -227,6 +258,7 @@ namespace TemperatureWarriorCode.Web {
                             return false;
                         }
                     }
+                    
                 }
                 return true;
             }
@@ -242,8 +274,8 @@ namespace TemperatureWarriorCode.Web {
 
             // Only show save and cooler mode in configuration mode and start round when we are ready
             string save = "<button type=\"button\" onclick='save()'>Guardar</button>";
+            string button = "<button type=\"button\" onclick='stop()'>Parar ejecución</button>";
             string temp = "<a href='#' class='btn btn-primary tm-btn-search' onclick='temp()'>Consultar Temperatura</a>";
-            string graph = "";
             if (ready) {
                 save = "";
             }
@@ -253,6 +285,10 @@ namespace TemperatureWarriorCode.Web {
             }
             if (Data.is_working) {
                 start = "";
+           }
+            if (stop)
+            {
+                button = "<button type=\"button\" onclick='back()'>Volver a la ronda</button>";
             }
             /*if (Data.csv_counter != 0) {
                 graph = "<canvas id='myChart' width='0' height='0'></canvas>";
@@ -356,7 +392,7 @@ namespace TemperatureWarriorCode.Web {
                         "</div>" +
 
                         "<div class='container ie-h-align-center-fix'>" +
-                        graph +
+                        button +
                         "</div>" +
 
                         
@@ -387,32 +423,50 @@ namespace TemperatureWarriorCode.Web {
 
 
                                                 "function save(){{" +
+                                                "let regex = /^[0-9]*$/;"+
                                                 "console.log(\"Calling Save in JS!!\");" +
                                                     "            var length = (document.forms['params'].length)/3-1;" +
                                                     "            var tempMax = [];" +
                                                     "            var tempMin = [];" +
                                                     "            var time = [];" +
                                                     "            for (var i = 0; i <= length-1; i++) {{" +
-                                                    "                if (document.forms['params']['tempMax'+i].value != ''){{" +
+                                                    "                if (document.forms['params']['tempMax'+i].value != '' && regex.test(document.forms['params']['tempMax'+i].value)){{" +
                                                     "                    tempMax.push((document.forms['params']['tempMax'+i].value));" +
-                                                    "                }}" +
-                                                    "                if (document.forms['params']['tempMin'+i].value != ''){{" +
+                                                    "                }}else{{" +
+                                                    "console.log('Error en la temperatura máxima');return;"+
+                                                    "}}" +
+                                                    "                if (document.forms['params']['tempMin'+i].value != '' && regex.test(document.forms['params']['tempMin'+i].value)){{" +
                                                     "                    tempMin.push(document.forms['params']['tempMin'+i].value);" +
-                                                    "                }}" +
-                                                    "                if (document.forms['params']['duracion'+i].value != ''){{" +
+"                                                   }}else{{" +
+                                                    "console.log('Error en la temperatura mínima'); return;" +
+                                                    "}}" +
+                                                    "                if (document.forms['params']['duracion'+i].value != '' && regex.test(document.forms['params']['duracion'+i].value)){{" +
                                                     "                    time.push(document.forms['params']['duracion'+i].value);" +
+"                                                   }}else{{" +
+                                                    "console.log('Error en la duración de la ronda');return;" +
+                                                    "}}" +
                                                     "                }}" +
-                                                    "            }}" +
-
+                                                    "if (document.forms['params']['displayRefresh'].value != '' && regex.test(document.forms['params']['displayRefresh'].value)){{" +
                                                 "var displayRefresh = document.forms['params']['displayRefresh'].value;" +
-                                                "var pass = document.forms['params']['pass'].value;" +
-                                                "location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh  + '&time=' + time + '&pass=' + pass;" +
+                                                "}} else {{"+
+                                                "console.log('Error en la cadencia de refresco');return;" +
+
+                                                "}}" +
+                                                     "if (document.forms['params']['pass'].value != ''){{" +
+                                               "var pass = document.forms['params']['pass'].value;" +
+                                               "}} else {{" +
+                                                "console.log('Error en la contraseña');return;" +
+
+                                                "}}" +
+                                                "location.href = 'setparams?tempMax=' + tempMax + '&tempMin=' + tempMin + '&displayRefresh=' + displayRefresh  + '&time=' + time + '&pass=' + pass;return;" +
                                                 "}} " +
                                                 "function temp(){{" +
                                                 "console.log(\"Calling temp in JS!!\");" +
                                                 "location.href = 'temp'" +
                                                 "}} " +
                                                 "function start(){{location.href = 'start'}}" +
+                                                "function stop(){{location.href= 'stop'}}"+
+                                                "function back(){{location.href= ''}}"+
                         "</script>" +
 "</body>" +
 "</html>";
